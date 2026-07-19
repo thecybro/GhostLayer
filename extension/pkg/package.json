@@ -1,0 +1,15 @@
+{
+  "name": "ghost",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "ghost_bg.wasm",
+    "ghost.js",
+    "ghost.d.ts"
+  ],
+  "main": "ghost.js",
+  "types": "ghost.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

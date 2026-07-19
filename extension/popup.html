@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GhostLayer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body style="background:#05070a; padding:40px; display:flex; justify-content:center;">
+<div id="popup">
+  <div class="header">
+    <span class="logo-dot"></span>
+    <span class="title">GhostLayer</span>
+  </div>
+  <div class="greeting">
+    Hello, <span class="username"></span>
+  </div>
+
+  <div class="notification" id="notification"></div>
+
+  <hr class="divider">
+  <div class="section" id="friends-section">
+    <div class="section-label">Friends</div>
+    <div class="friends-list" id="friends-list">
+      <div class="empty-state">No friends</div>
+    </div>
+    <button class="btn" id="add-friend-btn">Add Friend</button>
+  </div>
+  <hr class="divider">
+  <div class="section" id="identity-section">
+    <div class="section-label">My Identity</div>
+    <div class="identity-row">
+        <button class="create-identity-btn" id="create-identity-btn">Create Identity</button>
+      <span class="key-label">Key ID</span>
+      <span class="key-value" id="key-id"></span>
+    </div>
+    <button class="copy-invite-btn" id="copy-invite-btn">Copy Invite</button>
+  </div>
+  <div class="footer">
+    <button class="settings-link" id="settings-link">Settings</button>
+  </div>
+</div>
+<script type="module" src="popup.js"></script>
+</body>
+</html>

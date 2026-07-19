@@ -1,0 +1,218 @@
+:root {
+  --gl-bg: #0d1012;
+  --gl-panel: #14181b;
+  --gl-border: #232a2e;
+  --gl-text: #d8e0e2;
+  --gl-muted: #6b7880;
+  --gl-accent: #35e6b0;
+  --gl-accent-dim: #1f7a5e;
+  --gl-danger: #ff5c5c;
+  --gl-font: 'Segoe UI', system-ui, sans-serif;
+  --gl-mono: 'Courier New', monospace;
+}
+
+#popup {
+  position: relative;
+  width: 300px;
+  background: var(--gl-panel);
+  border: 1px solid var(--gl-border);
+  border-radius: 14px;
+  font-family: var(--gl-font);
+  color: var(--gl-text);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 18px 14px;
+  background: linear-gradient(180deg, rgba(53,230,176,0.08), transparent);
+}
+
+.logo-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gl-accent);
+  box-shadow: 0 0 8px var(--gl-accent);
+}
+
+.title {
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+}
+
+.greeting {
+  padding: 0 18px 14px;
+  font-size: 13px;
+  color: var(--gl-muted);
+}
+
+.username {
+  color: var(--gl-text);
+  font-weight: 500;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--gl-border);
+  margin: 0;
+}
+
+.section {
+  padding: 14px 18px;
+}
+
+.section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gl-muted);
+  margin-bottom: 10px;
+}
+
+.friends-list {
+  min-height: 20px;
+  margin-bottom: 12px;
+}
+
+.empty-state {
+  font-size: 13px;
+  color: var(--gl-muted);
+  font-style: italic;
+}
+
+.btn {
+  width: 100%;
+  padding: 9px 0;
+  border-radius: 8px;
+  border: 1px solid var(--gl-border);
+  background: transparent;
+  color: var(--gl-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--gl-muted);
+}
+
+.identity-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.create-identity-btn {
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--gl-border);
+  background: transparent;
+  color: var(--gl-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.create-identity-btn:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--gl-muted);
+}
+
+.key-label {
+  font-size: 12px;
+  color: var(--gl-muted);
+}
+
+.key-value {
+  font-family: var(--gl-mono);
+  font-size: 13px;
+  letter-spacing: 1px;
+  background: rgba(255,255,255,0.03);
+  padding: 3px 8px;
+  border-radius: 5px;
+  color: var(--gl-accent);
+}
+
+.copy-invite-btn {
+  width: 100%;
+  padding: 9px 0;
+  border-radius: 8px;
+  border: 1px solid var(--gl-accent-dim);
+  background: var(--gl-accent-dim);
+  color: #eafff6;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.copy-invite-btn:hover {
+  background: var(--gl-accent);
+  border-color: var(--gl-accent);
+  color: #05130d;
+}
+
+.footer {
+  padding: 12px 18px 16px;
+}
+
+.settings-link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+  color: var(--gl-muted);
+  background: none;
+  border: none;
+  font-family: inherit;
+  text-decoration: none;
+  padding: 6px 0;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.settings-link:hover {
+  color: var(--gl-text);
+}
+
+.notification {
+  max-height: 0;
+  margin: 0 18px;
+  padding: 0 12px;
+  text-align: center;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--gl-text);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid transparent;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.2s ease, opacity 0.2s ease, padding 0.2s ease, margin 0.2s ease;
+}
+
+.notification.show {
+  max-height: 40px;
+  padding: 8px 12px;
+  margin: 10px 18px 0;
+  opacity: 1;
+  border-color: var(--gl-border);
+}
+
+.notification.success {
+  border-color: var(--gl-accent-dim);
+  color: var(--gl-accent);
+  background: rgba(53,230,176,0.08);
+}
+
+.notification.error {
+  border-color: var(--gl-danger);
+  color: var(--gl-danger);
+  background: rgba(255,92,92,0.08);
+}
