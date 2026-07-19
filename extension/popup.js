@@ -8,7 +8,7 @@ function notify(text, type = "") {
 }
 
 async function main() {
-    await init();
+  await init();
     document.getElementById("create-identity-btn").addEventListener("click", () => {
       notify(create_identity(), "success");
     });
