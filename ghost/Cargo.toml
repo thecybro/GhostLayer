@@ -8,3 +8,14 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 wasm-bindgen = "0.2.126"
+rand = "0.10.2"
+rand_core = { version = "0.9", features = ["os_rng"] }
+x25519-dalek = { version = "3.0.0", features = ["getrandom", "static_secrets"] }
+chacha20poly1305 = { version = "0.11", features = ["getrandom", "arrayvec"] }
+zeroize = "1.9.0"
+serde = {version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.150"
+base64 = "0.22.1"
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.4", features = ["wasm_js"] }
+getrandom03 = { package = "getrandom", version = "0.3", features = ["wasm_js"] }
