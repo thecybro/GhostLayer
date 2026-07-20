@@ -79,6 +79,34 @@
   margin-bottom: 12px;
 }
 
+.friend-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.friend-details input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--gl-border);
+  background: rgba(255,255,255,0.03);
+  color: var(--gl-text);
+  font-size: 13px;
+  font-family: var(--gl-font);
+  box-sizing: border-box;
+}
+
+.friend-details input::placeholder {
+  color: var(--gl-muted);
+}
+
+.friend-details input:focus {
+  outline: none;
+  border-color: var(--gl-accent-dim);
+}
+
 .empty-state {
   font-size: 13px;
   color: var(--gl-muted);

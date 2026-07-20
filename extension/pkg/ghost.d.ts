@@ -1,7 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export function add_friend(): string;
+export function add_friend(nickname: string | null | undefined, public_key: string, current_index_json: string): string;
 
 export function create_identity(): string;
 
@@ -9,11 +9,13 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
-    readonly add_friend: () => [number, number];
+    readonly add_friend: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly create_identity: () => [number, number];
     readonly __wbindgen_exn_store: (a: number) => void;
     readonly __externref_table_alloc: () => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
+    readonly __wbindgen_malloc: (a: number, b: number) => number;
+    readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;
     readonly __wbindgen_start: () => void;
 }
