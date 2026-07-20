@@ -6,7 +6,7 @@ image_default=$(find $image_directory -name "$default_image_name" -print -quit 2
 
 output_directory="extension/icons"
 
-image_sizes="16,32,48,128"
+image_sizes="16,32,48,128,256"
 
 if [ ! -d "$image_directory" ]; then
     echo -e "Directory '$image_directory' wasn't avaiable and has been created!"
