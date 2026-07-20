@@ -26,7 +26,6 @@ pub fn decrypt_text(key_bytes: &[u8; 32], nonce: Vec<u8>, ciphertext: Vec<u8>) -
     let nonce = Nonce::from_slice(&nonce);
     let decrypted_text = cipher.decrypt(nonce, ciphertext.as_ref());
 
-    // I am a little confused with returning Result<> here
     match decrypted_text {
         Ok(bytes) => {
             let decrypted_text = String::from_utf8(bytes).expect("invalid utf8");

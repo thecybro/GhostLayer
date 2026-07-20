@@ -18,7 +18,7 @@ pub struct Identity {
     pub name: Option<String>, // optional
     pub public_key: String,
     pub private_key: String,
-    pub key_id: String // user would see a hashed version of it, or just first few letters
+    pub key_id: String // first 5 letters of the base64 encoded for users to see
 }
 
 pub fn create_identity() -> Identity {
@@ -31,8 +31,8 @@ pub fn create_identity() -> Identity {
     let private_b64 = STANDARD.encode(private_bytes);
     let public_b64 = STANDARD.encode(public_bytes);
 
-    let key_id = public_b64[0..5].to_string();
-
+    let key_id = public_b64[0..5].to_string(); // first 5 letters
+    
     Identity {
         name: None,
         public_key: public_b64,
