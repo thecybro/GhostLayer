@@ -40,6 +40,25 @@ export function create_identity() {
         wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
     }
 }
+
+/**
+ * @param {string} storage_json
+ * @returns {string}
+ */
+export function load_display_data(storage_json) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const ptr0 = passStringToWasm0(storage_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.load_display_data(ptr0, len0);
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,

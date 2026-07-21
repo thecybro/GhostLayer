@@ -3,6 +3,7 @@
 export const memory: WebAssembly.Memory;
 export const add_friend: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
 export const create_identity: () => [number, number];
+export const load_display_data: (a: number, b: number) => [number, number];
 export const __wbindgen_exn_store: (a: number) => void;
 export const __externref_table_alloc: () => number;
 export const __wbindgen_externrefs: WebAssembly.Table;

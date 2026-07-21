@@ -5,12 +5,15 @@ export function add_friend(nickname: string | null | undefined, public_key: stri
 
 export function create_identity(): string;
 
+export function load_display_data(storage_json: string): string;
+
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly add_friend: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly create_identity: () => [number, number];
+    readonly load_display_data: (a: number, b: number) => [number, number];
     readonly __wbindgen_exn_store: (a: number) => void;
     readonly __externref_table_alloc: () => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;

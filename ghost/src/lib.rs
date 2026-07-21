@@ -86,3 +86,8 @@ pub fn add_friend(nickname: Option<String>, public_key: String, current_index_js
     }
 }
 
+#[wasm_bindgen]
+pub fn load_display_data(storage_json: String) -> String {
+    let result = storage::parse_storage(storage_json);
+    serde_json::to_string(&result).unwrap()
+}

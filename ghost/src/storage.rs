@@ -75,7 +75,9 @@ pub fn add_to_index(index: &Vec<String>, public_key: &str) -> Vec<String> {
 pub fn parse_storage(storage_json: String) -> LoadResult {
     let parsed: serde_json::Value = serde_json::from_str(&storage_json).unwrap();
 
-    let identity_key_id = if !parsed["identity"].is_null() {
+    let has_identity = !parsed["identity"].is_null();
+    
+    let identity_key_id = if has_identity {
         let identity_str = parsed["identity"].as_str().unwrap();
         let identity: Identity = identity_from_json(identity_str).unwrap();
         Some(identity.key_id)
@@ -83,7 +85,8 @@ pub fn parse_storage(storage_json: String) -> LoadResult {
         None
     };
     let friends = if !parsed["friend_index"].is_null() {
-        let friend_index: Vec<String> = serde_json::from_value(parsed["friend_index"].clone()).unwrap();
+        let friend_index_str = parsed["friend_index"].as_str().unwrap();
+        let friend_index = index_from_json(friend_index_str).unwrap();
         let mut friends = Vec::new();
         
         for public_key in friend_index {
@@ -97,7 +100,6 @@ pub fn parse_storage(storage_json: String) -> LoadResult {
     } else {
         Vec::new()
     };
-    let has_identity = !parsed["identity"].is_null();
 
     LoadResult {
         has_identity,
