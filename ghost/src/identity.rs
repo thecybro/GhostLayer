@@ -21,7 +21,7 @@ pub struct Identity {
     pub key_id: String // first 5 letters of the base64 encoded for users to see
 }
 
-pub fn create_identity() -> Identity {
+pub fn create_identity(name: Option<String>) -> Identity {
     let private_key = StaticSecret::random();
     let public_key = PublicKey::from(&private_key);
 
@@ -34,7 +34,7 @@ pub fn create_identity() -> Identity {
     let key_id = public_b64[0..5].to_string(); // first 5 letters
     
     Identity {
-        name: None,
+        name: name,
         public_key: public_b64,
         private_key: private_b64,
         key_id,
