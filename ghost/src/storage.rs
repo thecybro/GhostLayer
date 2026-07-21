@@ -14,6 +14,7 @@ use crate::friends::Friend;
 #[derive(Serialize)]
 pub struct LoadResult {
     pub has_identity: bool,
+    pub username: Option<String>,
     pub identity_key_id: Option<String>,
     pub friends: Vec<Friend>,
 }
@@ -76,10 +77,22 @@ pub fn parse_storage(storage_json: String) -> LoadResult {
     let parsed: serde_json::Value = serde_json::from_str(&storage_json).unwrap();
 
     let has_identity = !parsed["identity"].is_null();
-    
-    let identity_key_id = if has_identity {
+
+    fn get_identity(parsed: &serde_json::Value) -> Identity {
         let identity_str = parsed["identity"].as_str().unwrap();
         let identity: Identity = identity_from_json(identity_str).unwrap();
+        identity
+    }
+    
+    let username = if has_identity {
+        let identity: Identity = get_identity(&parsed);
+        identity.username
+    } else {
+        None
+    };
+    
+    let identity_key_id = if has_identity {
+        let identity: Identity = get_identity(&parsed);
         Some(identity.key_id)
     } else {
         None
@@ -103,6 +116,7 @@ pub fn parse_storage(storage_json: String) -> LoadResult {
 
     LoadResult {
         has_identity,
+        username,
         identity_key_id,
         friends,
     }

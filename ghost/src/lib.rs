@@ -19,6 +19,7 @@ pub struct StorageWrite {
 #[derive(Serialize)]
 pub struct FunctionResult {
     pub success: bool,
+    pub username: Option<String>,
     pub error: Option<String>,
     pub display: String, // info to show to user, eg: key_id
     pub write: Vec<StorageWrite>,
@@ -33,10 +34,11 @@ pub struct FunctionResult {
 
 // Error handling is not yet as well done
 #[wasm_bindgen]
-pub fn create_identity() -> String {     
-    let identity: Identity = create_identity_internal();
+pub fn create_identity(username: Option<String>) -> String {   
+    let identity: Identity = create_identity_internal(&username);
     let result = FunctionResult {
         success: true,
+        username: username,
         error: None,
         display: identity.key_id.to_string(),
         write: vec! [
@@ -59,6 +61,7 @@ pub fn add_friend(nickname: Option<String>, public_key: String, current_index_js
             
             let result = FunctionResult {
                 success: true,
+                username: None,
                 error: None,
                 display: friend.key_id.to_string(),
                 write: vec![
@@ -77,6 +80,7 @@ pub fn add_friend(nickname: Option<String>, public_key: String, current_index_js
         Err(e) => {
             let result = FunctionResult {
                 success: false,
+                username: None,
                 error: Some(e),
                 display: "Error!".to_string(),
                 write: vec![]

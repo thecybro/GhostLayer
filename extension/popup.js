@@ -7,6 +7,10 @@ function notify(text, type = "") {
   setTimeout(() => el.classList.remove("show"), 3000);
 }
 
+function isEmpty(value) {
+  return value == null || (typeof value === "string" && value.trim() === "");
+}   
+
 async function loadUI() {
   const all = await chrome.storage.local.get(null);
   const storageJson = JSON.stringify(all);
@@ -16,9 +20,22 @@ async function loadUI() {
   const result = JSON.parse(load_display_data(storageJson));
 
   if (result.has_identity) {
+    const username = document.getElementById("username");
+    const username_input = document.getElementById("username-input");
+    
     document.getElementById("create-identity-btn").style.display = "none";
-    document.getElementById("key-id").textContent = result.identity_key_id;
+    document.getElementById("username").textContent = result.username;
+    document.getElementById("username-input").style.display = "none";
+
+    if (isEmpty(result.username)) {
+      document.getElementById("key-label").textContent = "KeyID";
+      document.getElementById("key-id").textContent = result.identity_key_id;
+    } else {
+      document.getElementById("key-label").textContent = "Name:";
+      document.getElementById("key-id").textContent = result.username;
+    }
   }
+  
 
   const friendsList = document.getElementById("friends-list");
   friendsList.innerHTML = "";
@@ -50,7 +67,9 @@ async function main() {
   await loadUI();
   
   document.getElementById("create-identity-btn").addEventListener("click", async () => {
-    const result = JSON.parse(create_identity());
+    const username = document.getElementById("username-input").value;
+    const result = JSON.parse(create_identity(username));
+    // console.log(result.username);
 
     if (result.success) {
       for (const w of result.write) {

@@ -15,13 +15,13 @@ use serde::{Serialize, Deserialize};
 // Unused for now, would take it to work later
 #[derive(Serialize, Deserialize)]
 pub struct Identity {
-    pub name: Option<String>, // optional
+    pub username: Option<String>, // optional
     pub public_key: String,
     pub private_key: String,
     pub key_id: String // first 5 letters of the base64 encoded for users to see
 }
 
-pub fn create_identity(name: Option<String>) -> Identity {
+pub fn create_identity(username: &Option<String>) -> Identity {
     let private_key = StaticSecret::random();
     let public_key = PublicKey::from(&private_key);
 
@@ -34,7 +34,7 @@ pub fn create_identity(name: Option<String>) -> Identity {
     let key_id = public_b64[0..5].to_string(); // first 5 letters
     
     Identity {
-        name: name,
+        username: username.clone(),
         public_key: public_b64,
         private_key: private_b64,
         key_id,

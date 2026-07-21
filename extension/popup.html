@@ -7,24 +7,41 @@
 </head>
 <body style="background:#05070a; padding:40px; display:flex; justify-content:center;">
 <div id="popup">
-  <div class="header">
-    <span class="logo-dot"></span>
-    <span class="title">GhostLayer</span>
-  </div>
-  <div class="greeting">
-    Hello, <span class="username" id="username"> </span>
-  </div>
+    <div class="hero">
+        <div class="header">
+            <div class="brand">
+                <span class="logo-dot"></span>
+                <span class="title">GhostLayer</span>
+            </div>
+    
+            <div class="status">
+                Secure
+            </div>
+        </div>
+    
+        <div class="greeting">
+            <div class="greeting-title">
+                Welcome,<span class="username" id="username"></span>
+            </div>
 
-  <div class="notification" id="notification"></div>
-
+            <!--Didn't think it would be good lmao-->
+            <!--<div class="greeting-subtitle">
+                Talk to anyone securely with no overhead.
+            </div>-->
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+    <hr class="divider">
+  
   <div class="section" id="identity-section">
     <div class="section-label">My Identity</div>
-    <div class="username-input" id="username-input">
-        <input type="text" class="name-input" id="name-input" placeholder="username (optional)">
+    <div class="name-input" id="name-input">
+        <input type="text" class="username-input" id="username-input" placeholder="username (optional)">
     </div>
     <div class="identity-row">
         <button class="create-identity-btn" id="create-identity-btn">Create Identity</button>
-      <span class="key-label">Key ID</span>
+      <span class="key-label" id="key-label"></span>
       <span class="key-value" id="key-id"></span>
     </div>
     <button class="copy-invite-btn" id="copy-invite-btn">Copy Invite</button>

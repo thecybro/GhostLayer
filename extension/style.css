@@ -23,37 +23,78 @@
   overflow: hidden;
 }
 
+.hero {
+    padding: 18px;
+    background:
+        radial-gradient(circle at top left,
+            rgba(53,230,176,.12),
+            transparent 55%),
+        linear-gradient(
+            180deg,
+            rgba(255,255,255,.02),
+            transparent);
+}
+
 .header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 16px 18px 14px;
-  background: linear-gradient(180deg, rgba(53,230,176,0.08), transparent);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .logo-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--gl-accent);
-  box-shadow: 0 0 8px var(--gl-accent);
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--gl-accent);
+    box-shadow:
+        0 0 12px rgba(53,230,176,.75),
+        0 0 24px rgba(53,230,176,.25);
 }
 
 .title {
-  font-weight: 600;
-  font-size: 15px;
-  letter-spacing: 0.5px;
+    font-size: 19px;
+    font-weight: 650;
+    letter-spacing: .4px;
+}
+
+.status {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--gl-accent);
+
+    background: rgba(53,230,176,.08);
+    border: 1px solid rgba(53,230,176,.18);
 }
 
 .greeting {
-  padding: 0 18px 14px;
-  font-size: 13px;
-  color: var(--gl-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.greeting-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gl-text);
 }
 
 .username {
-  color: var(--gl-text);
-  font-weight: 500;
+    margin-left: 6px;
+    color: var(--gl-accent);
+}
+
+.greeting-subtitle {
+    font-size: 13px;
+    color: var(--gl-muted);
+    line-height: 1.5;
 }
 
 .divider {
@@ -74,13 +115,13 @@
   margin-bottom: 10px;
 }
 
-.username-input {
+.name-input {
     display: flex;
     flex-direction: column;
     margin-bottom: 12px;
 }
 
-.username-input input {
+.name-input input {
     width: 100%;
     padding: 8px 10px;
     border-radius: 8px;
@@ -93,11 +134,11 @@
     transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.username-input input::placeholder {
+.name-input input::placeholder {
     color: var(--gl-muted);
 }
 
-.username-input input:focus {
+.name-input input:focus {
     outline: none;
     border-color: var(--gl-accent);
     box-shadow: 0 0 0 3px rgba(53, 230, 176, 0.08);
@@ -206,6 +247,31 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+}
+
+#identity-section {
+    position: relative;
+}
+
+#identity-section::before {
+    content: "";
+    display: block;
+    width: 34px;
+    height: 2px;
+    margin-bottom: 10px;
+
+    background: var(--gl-accent);
+    border-radius: 999px;
+
+    opacity: .6;
+}
+
+.section-label {
+    font-size: 11px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--gl-muted);
+    margin-bottom: 14px;
 }
 
 .create-identity-btn {

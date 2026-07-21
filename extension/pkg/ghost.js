@@ -26,18 +26,21 @@ export function add_friend(nickname, public_key, current_index_json) {
 }
 
 /**
+ * @param {string | null} [username]
  * @returns {string}
  */
-export function create_identity() {
-    let deferred1_0;
-    let deferred1_1;
+export function create_identity(username) {
+    let deferred2_0;
+    let deferred2_1;
     try {
-        const ret = wasm.create_identity();
-        deferred1_0 = ret[0];
-        deferred1_1 = ret[1];
+        var ptr0 = isLikeNone(username) ? 0 : passStringToWasm0(username, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        const ret = wasm.create_identity(ptr0, len0);
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
         return getStringFromWasm0(ret[0], ret[1]);
     } finally {
-        wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
     }
 }
 
