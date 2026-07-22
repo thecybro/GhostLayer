@@ -2,6 +2,9 @@ use serde_json;
 use serde::Serialize;
 use crate::identity::Identity;
 use crate::friends::Friend;
+use web_sys::window;
+use wasm_bindgen::JsValue;
+use wasm_bindgen_futures::JsFuture;
 
 // Commented this and friend_display_from_json because FriendDisplay was identical to Friend
 // #[derive(Serialize, Deserialize)]
@@ -14,8 +17,9 @@ use crate::friends::Friend;
 #[derive(Serialize)]
 pub struct LoadResult {
     pub has_identity: bool,
-    pub username: Option<String>,
     pub identity_key_id: Option<String>,
+    pub username: Option<String>,
+    pub public_key: Option<String>,
     pub friends: Vec<Friend>,
 }
 
@@ -73,20 +77,27 @@ pub fn add_to_index(index: &Vec<String>, public_key: &str) -> Vec<String> {
 //     }
 // }
 
+fn get_identity(parsed: &serde_json::Value) -> Identity {
+    let identity_str = parsed["identity"].as_str().unwrap();
+    let identity: Identity = identity_from_json(identity_str).unwrap();
+    identity
+}
+
 pub fn parse_storage(storage_json: String) -> LoadResult {
     let parsed: serde_json::Value = serde_json::from_str(&storage_json).unwrap();
 
     let has_identity = !parsed["identity"].is_null();
-
-    fn get_identity(parsed: &serde_json::Value) -> Identity {
-        let identity_str = parsed["identity"].as_str().unwrap();
-        let identity: Identity = identity_from_json(identity_str).unwrap();
-        identity
-    }
     
     let username = if has_identity {
         let identity: Identity = get_identity(&parsed);
         identity.username
+    } else {
+        None
+    };
+
+    let public_key = if has_identity {
+        let identity: Identity = get_identity(&parsed);
+        Some(identity.public_key)
     } else {
         None
     };
@@ -115,9 +126,32 @@ pub fn parse_storage(storage_json: String) -> LoadResult {
     };
 
     LoadResult {
-        has_identity,
-        username,
-        identity_key_id,
-        friends,
+        has_identity: has_identity,
+        identity_key_id: identity_key_id,
+        username: username,
+        public_key: public_key,
+        friends: friends,
     }
+}
+
+pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<String, JsValue> {
+    let window = window().ok_or_else(|| JsValue::from_str("No global window found"))?;
+    let clipboard = window.navigator().clipboard();
+
+    let item = item.to_lowercase().to_string();
+    let mut text = String::new();
+    
+    let parsed_data = parse_storage(storage_json);
+    // let parsed_data = serde_json::to_string(&result).unwrap();
+    
+    if item == "public_key".to_string() {
+        text = parsed_data.public_key.clone().unwrap_or_default();
+    } else if item == "username".to_string() {
+        text = parsed_data.username.clone().unwrap_or_default();
+    }
+    
+    let promise = clipboard.write_text(&text);
+    JsFuture::from(promise).await?;
+    
+    Ok(text.to_string())
 }

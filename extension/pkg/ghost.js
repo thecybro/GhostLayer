@@ -26,10 +26,16 @@ export function add_friend(nickname, public_key, current_index_json) {
 }
 
 /**
+ * @param {string} storage_json
+ * @param {string} item
  * @returns {Promise<string>}
  */
-export function copy_to_clipboard() {
-    const ret = wasm.copy_to_clipboard();
+export function copy_to_clipboard(storage_json, item) {
+    const ptr0 = passStringToWasm0(storage_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(item, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.copy_to_clipboard(ptr0, len0, ptr1, len1);
     return ret;
 }
 
@@ -170,7 +176,7 @@ function __wbg_get_imports() {
             return ret;
         },
         __wbindgen_cast_0000000000000001: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 51, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
+            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 48, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
             const ret = makeMutClosure(arg0, arg1, wasm_bindgen_7815ba1f1746f71b___convert__closures_____invoke___wasm_bindgen_7815ba1f1746f71b___JsValue__core_9b3796e30d99ddb7___result__Result_____wasm_bindgen_7815ba1f1746f71b___JsError___true_);
             return ret;
         },

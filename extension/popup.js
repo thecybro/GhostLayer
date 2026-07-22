@@ -1,4 +1,5 @@
 import init, { create_identity, add_friend, load_display_data, copy_to_clipboard } from "./pkg/ghost.js";
+import { saveToStorage, loadFromStorage } from "./storage.js";
 
 function notify(text, type = "") {
   const el = document.getElementById("notification");
@@ -6,22 +7,23 @@ function notify(text, type = "") {
   el.className = "notification show" + (type ? " " + type : "");
   setTimeout(() => el.classList.remove("show"), 3000);
 }
-
+chrome
 function isEmpty(value) {
   return value == null || (typeof value === "string" && value.trim() === "");
 }   
 
 async function loadUI() {
-  const all = await chrome.storage.local.get(null);
+  const all = await loadFromStorage(null);
   const storageJson = JSON.stringify(all);
-
+  
   // console.log(storageJson);
   
   const result = JSON.parse(load_display_data(storageJson));
+  // console.log(`Has_identity: ${result.has_identity}`);
 
   if (result.has_identity) {
-    const username = document.getElementById("username");
-    const username_input = document.getElementById("username-input");
+    // const username = document.getElementById("username");
+    // const username_input = document.getElementById("username-input");
     
     document.getElementById("create-identity-btn").style.display = "none";
     document.getElementById("username").textContent = result.username;
@@ -73,7 +75,9 @@ async function main() {
 
     if (result.success) {
       for (const w of result.write) {
-        await chrome.storage.local.set({ [w.key]: w.value });
+        // await chrome.storage.local.set({ [w.key]: w.value });
+        await saveToStorage(w.key, w.value);
+        // console.log(`Set value: ${w.key}, ${w.value}`)
         // console.log(w.value);
       }
       notify(`Identity "${result.display}" has been created!` , "success");
@@ -87,14 +91,16 @@ async function main() {
     const nickname = document.getElementById('friend-nickname').value || null;
     const publicKey = document.getElementById('friend-pubkey').value;
 
-    const stored = await chrome.storage.local.get("friend_index");
+    // const stored = await chrome.storage.local.get("friend_index");
+    const stored = await loadFromStorage("friend-index");
     const currentIndexJson = stored.friend_index ?? "[]";
 
     const result = JSON.parse(add_friend(nickname, publicKey, currentIndexJson));
 
     if (result.success) {
       for (const w of result.write) {
-        await chrome.storage.local.set({ [w.key]: w.value });
+        // await chrome.storage.local.set({ [w.key]: w.value });
+        await saveToStorage(w.key, w.value);
       }
       notify(`Friend "${result.display}" has been added!`, "success");
     } else {
@@ -104,9 +110,14 @@ async function main() {
   });
 
   // Copies your public_key to clipboard so that you can send it to your friend
+  // copy_to_clipboard() also allows to copy username, and properties of friends,
+  // but we haven't implemented that logic yet and probably wont until we see
+  // real usecase for it.
   document.getElementById("copy-invite-btn").addEventListener("click", async () => {
-    const text = await copy_to_clipboard();
-    notify(`Copied "${text}" to clipboard!`, "success");
+    const all = await chrome.storage.local.get(null);
+    const storageJson = JSON.stringify(all);
+    await copy_to_clipboard(storageJson, "public_key");
+    notify(`Copied public key to clipboard!`, "success");
   });
 }
 

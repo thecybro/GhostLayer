@@ -3,7 +3,7 @@
 
 export function add_friend(nickname: string | null | undefined, public_key: string, current_index_json: string): string;
 
-export function copy_to_clipboard(): Promise<string>;
+export function copy_to_clipboard(storage_json: string, item: string): Promise<string>;
 
 export function create_identity(username?: string | null): string;
 
@@ -14,7 +14,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly add_friend: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
-    readonly copy_to_clipboard: () => any;
+    readonly copy_to_clipboard: (a: number, b: number, c: number, d: number) => any;
     readonly create_identity: (a: number, b: number) => [number, number];
     readonly load_display_data: (a: number, b: number) => [number, number];
     readonly wasm_bindgen_7815ba1f1746f71b___convert__closures_____invoke___wasm_bindgen_7815ba1f1746f71b___JsValue__core_9b3796e30d99ddb7___result__Result_____wasm_bindgen_7815ba1f1746f71b___JsError___true_: (a: number, b: number, c: any) => [number, number];

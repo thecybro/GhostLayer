@@ -1,16 +1,10 @@
 use wasm_bindgen::prelude::*;
 use serde::Serialize;
 use serde_json;
-use web_sys::window;
-use wasm_bindgen_futures::JsFuture;
 
 mod identity;
 mod friends;
 mod storage;
-use crate::identity::{
-    Identity,
-    create_identity as create_identity_internal
-};
 
 #[derive(Serialize)]
 pub struct StorageWrite {
@@ -27,6 +21,7 @@ pub struct FunctionResult {
     pub write: Vec<StorageWrite>,
 }
 
+
 // These are the json types we need:
 // 
 // identity        → { "name": null, "public_key": "...", "private_key": "...", "key_id": "..." }
@@ -37,12 +32,17 @@ pub struct FunctionResult {
 // Error handling is not yet as well done
 #[wasm_bindgen]
 pub fn create_identity(username: Option<String>) -> String {   
-    let identity: Identity = create_identity_internal(&username);
+    let identity: identity::Identity = identity::create_identity(&username);
+    let display = username
+        .as_ref()
+        .filter(|s| !s.is_empty())
+        .unwrap_or(&identity.key_id)
+        .clone();
     let result = FunctionResult {
         success: true,
         username: username,
         error: None,
-        display: identity.key_id.to_string(),
+        display: display,
         write: vec! [
             StorageWrite {
                 key: "identity".to_string(), value: storage::identity_to_json(&identity)
@@ -99,15 +99,6 @@ pub fn load_display_data(storage_json: String) -> String {
 }
 
 #[wasm_bindgen]
-pub async fn copy_to_clipboard() -> Result<String, JsValue> {
-    let window = window().ok_or_else(|| JsValue::from_str("No global window found"))?;
-    let navigator = window.navigator();
-    let clipboard = navigator.clipboard();
-
-    let text = "Public Key".to_string();
-    
-    let promise = clipboard.write_text(&text);
-    JsFuture::from(promise).await?;
-    
-    Ok(text)
+pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<String, JsValue> {
+    storage::copy_to_clipboard(storage_json, item).await
 }
