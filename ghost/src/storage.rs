@@ -67,8 +67,9 @@ pub fn add_to_index(index: &Vec<String>, public_key: &str) -> Result<Vec<String>
         new_index.push(public_key.to_string());
         Ok(new_index)
     } else {
-        Err("Duplicate public_key".to_string())
-    }
+        Err("Duplicate public key".to_string())
+    } 
+    
 }
 
 // Commented this and FriendDisplay because FriendDisplay was identical to Friend
@@ -140,20 +141,22 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
     let window = window().ok_or_else(|| JsValue::from_str("No global window found"))?;
     let clipboard = window.navigator().clipboard();
 
-    let item = item.to_lowercase().to_string();
-    let mut text = String::new();
-    
     let parsed_data = parse_storage(storage_json);
-    // let parsed_data = serde_json::to_string(&result).unwrap();
-    
-    if item == "public_key".to_string() {
-        text = parsed_data.public_key.clone().unwrap_or_default();
-    } else if item == "username".to_string() {
-        text = parsed_data.username.clone().unwrap_or_default();
-    }
-    
-    let promise = clipboard.write_text(&text);
-    JsFuture::from(promise).await?;
-    
-    Ok(text.to_string())
+    let item = item.to_lowercase();
+
+    let text = match item.as_str() {
+        "public_key" => {
+            if !parsed_data.has_identity {
+                return Err(JsValue::from_str("No identity found!"));
+            }
+            parsed_data.public_key.unwrap_or_default()
+        }
+        "username" => parsed_data.username.unwrap_or_default(),
+        _ => return Err(JsValue::from_str("Invalid clipboard item")),
+    };
+
+    JsFuture::from(clipboard.write_text(&text)).await?;
+
+    Ok(text)
 }
+

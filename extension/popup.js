@@ -1,6 +1,6 @@
 import init, { create_identity, add_friend, load_display_data, copy_to_clipboard } from "./pkg/ghost.js";
 import { saveToStorage, loadFromStorage } from "./storage.js";
-
+chrome
 function notify(text, type = "") {
   const el = document.getElementById("notification");
   el.textContent = text;
@@ -35,6 +35,7 @@ async function loadUI() {
       document.getElementById("key-id").textContent = result.username;
     }
   }
+  
   
 
   const friendsList = document.getElementById("friends-list");
@@ -89,8 +90,8 @@ async function main() {
     const nickname = document.getElementById('friend-nickname').value || null;
     const publicKey = document.getElementById('friend-pubkey').value;
 
-    const stored = await chrome.storage.local.get("friend_index");
-    // const stored = await loadFromStorage("friend_index"); // loadFromStorage is Buggy
+    // const stored = await chrome.storage.local.get("friend_index");
+    const stored = await loadFromStorage("friend_index"); // loadFromStorage is fixed, maybe?
     const currentIndexJson = stored.friend_index ?? "[]";
 
     const result = JSON.parse(add_friend(nickname, publicKey, currentIndexJson));
@@ -112,10 +113,14 @@ async function main() {
   // but we haven't implemented that logic yet and probably wont until we see
   // real usecase for it.
   document.getElementById("copy-invite-btn").addEventListener("click", async () => {
-    const all = await chrome.storage.local.get(null);
+    const all = await loadFromStorage(null);
     const storageJson = JSON.stringify(all);
-    await copy_to_clipboard(storageJson, "public_key");
-    notify(`Copied public key to clipboard!`, "success");
+    try {
+      let result = await copy_to_clipboard(storageJson, "public_key");
+      notify(`Copied public key "${result.slice(0,4)}.." to clipboard!`, "success");
+    } catch (err) {
+      notify(err, "error");
+    }
   });
 }
 
