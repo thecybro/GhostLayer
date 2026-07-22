@@ -1,4 +1,4 @@
-import init, { create_identity, add_friend, load_display_data } from "./pkg/ghost.js";
+import init, { create_identity, add_friend, load_display_data, copy_to_clipboard } from "./pkg/ghost.js";
 
 function notify(text, type = "") {
   const el = document.getElementById("notification");
@@ -101,6 +101,12 @@ async function main() {
       notify(result.error, "error");
     }
     loadUI();
+  });
+
+  // Copies your public_key to clipboard so that you can send it to your friend
+  document.getElementById("copy-invite-btn").addEventListener("click", async () => {
+    const text = await copy_to_clipboard();
+    notify(`Copied "${text}" to clipboard!`, "success");
   });
 }
 

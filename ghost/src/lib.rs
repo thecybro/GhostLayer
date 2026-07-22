@@ -1,6 +1,8 @@
 use wasm_bindgen::prelude::*;
 use serde::Serialize;
 use serde_json;
+use web_sys::window;
+use wasm_bindgen_futures::JsFuture;
 
 mod identity;
 mod friends;
@@ -94,4 +96,18 @@ pub fn add_friend(nickname: Option<String>, public_key: String, current_index_js
 pub fn load_display_data(storage_json: String) -> String {
     let result = storage::parse_storage(storage_json);
     serde_json::to_string(&result).unwrap()
+}
+
+#[wasm_bindgen]
+pub async fn copy_to_clipboard() -> Result<String, JsValue> {
+    let window = window().ok_or_else(|| JsValue::from_str("No global window found"))?;
+    let navigator = window.navigator();
+    let clipboard = navigator.clipboard();
+
+    let text = "Public Key".to_string();
+    
+    let promise = clipboard.write_text(&text);
+    JsFuture::from(promise).await?;
+    
+    Ok(text)
 }

@@ -3,6 +3,8 @@
 
 export function add_friend(nickname: string | null | undefined, public_key: string, current_index_json: string): string;
 
+export function copy_to_clipboard(): Promise<string>;
+
 export function create_identity(username?: string | null): string;
 
 export function load_display_data(storage_json: string): string;
@@ -12,14 +14,19 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly add_friend: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
+    readonly copy_to_clipboard: () => any;
     readonly create_identity: (a: number, b: number) => [number, number];
     readonly load_display_data: (a: number, b: number) => [number, number];
+    readonly wasm_bindgen_7815ba1f1746f71b___convert__closures_____invoke___wasm_bindgen_7815ba1f1746f71b___JsValue__core_9b3796e30d99ddb7___result__Result_____wasm_bindgen_7815ba1f1746f71b___JsError___true_: (a: number, b: number, c: any) => [number, number];
+    readonly wasm_bindgen_7815ba1f1746f71b___convert__closures_____invoke___js_sys_2c04299f1b2b182f___Function_fn_wasm_bindgen_7815ba1f1746f71b___JsValue_____wasm_bindgen_7815ba1f1746f71b___sys__Undefined___js_sys_2c04299f1b2b182f___Function_fn_wasm_bindgen_7815ba1f1746f71b___JsValue_____wasm_bindgen_7815ba1f1746f71b___sys__Undefined_______true_: (a: number, b: number, c: any, d: any) => void;
     readonly __wbindgen_exn_store: (a: number) => void;
     readonly __externref_table_alloc: () => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
+    readonly __wbindgen_destroy_closure: (a: number, b: number) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;
+    readonly __externref_table_dealloc: (a: number) => void;
     readonly __wbindgen_start: () => void;
 }
 

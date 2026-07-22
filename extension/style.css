@@ -91,11 +91,11 @@
     color: var(--gl-accent);
 }
 
-.greeting-subtitle {
+/*.greeting-subtitle {
     font-size: 13px;
     color: var(--gl-muted);
     line-height: 1.5;
-}
+}*/
 
 .divider {
   border: none;
