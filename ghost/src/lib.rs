@@ -60,24 +60,40 @@ pub fn add_friend(nickname: Option<String>, public_key: String, current_index_js
             // when there aren't any friends yet
             let index = storage::index_from_json(&current_index_json).unwrap_or_default(); 
             let new_index = storage::add_to_index(&index, &friend.public_key);
+
+            match new_index {
+                Ok(n_index) => {
+                    let result = FunctionResult {
+                        success: true,
+                        username: None,
+                        error: None,
+                        display: friend.key_id.to_string(),
+                        write: vec![
+                            StorageWrite { // json with details of one friend
+                                key: storage::friend_key(&friend.public_key),
+                                value: storage::friend_to_json(&friend)
+                            },
+                            StorageWrite { // json with just the public keys of friends
+                                key: "friend_index".to_string(),
+                                value: storage::index_to_json(&n_index)
+                            },
+                        ]
+                    };
+                    return serde_json::to_string(&result).unwrap()
+                },
+                Err(e) => {
+                    let result = FunctionResult {
+                        success: false,
+                        username: None,
+                        error: Some(e),
+                        display: "Error!".to_string(),
+                        write: vec![]
+                        };
+                    serde_json::to_string(&result).unwrap()
+                }
+            }
             
-            let result = FunctionResult {
-                success: true,
-                username: None,
-                error: None,
-                display: friend.key_id.to_string(),
-                write: vec![
-                    StorageWrite { // json with details of one friend
-                        key: storage::friend_key(&friend.public_key),
-                        value: storage::friend_to_json(&friend)
-                    },
-                    StorageWrite { // json with just the public keys of friends
-                        key: "friend_index".to_string(),
-                        value: storage::index_to_json(&new_index)
-                    },
-                ]
-            };
-            return serde_json::to_string(&result).unwrap()
+            
         },
         Err(e) => {
             let result = FunctionResult {

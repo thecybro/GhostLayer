@@ -60,13 +60,15 @@ pub fn index_from_json(json: &str) -> Result<Vec<String>, String> {
     }
 }
 
-pub fn add_to_index(index: &Vec<String>, public_key: &str) -> Vec<String> {
+pub fn add_to_index(index: &Vec<String>, public_key: &str) -> Result<Vec<String>, String> {
     let mut new_index = index.clone();
     // To avoid pushing duplicate key
     if !new_index.iter().any(|k| k == public_key){
-        new_index.push(public_key.to_string())
-    };
-    new_index
+        new_index.push(public_key.to_string());
+        Ok(new_index)
+    } else {
+        Err("Duplicate public_key".to_string())
+    }
 }
 
 // Commented this and FriendDisplay because FriendDisplay was identical to Friend

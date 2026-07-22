@@ -7,7 +7,7 @@ function notify(text, type = "") {
   el.className = "notification show" + (type ? " " + type : "");
   setTimeout(() => el.classList.remove("show"), 3000);
 }
-chrome
+
 function isEmpty(value) {
   return value == null || (typeof value === "string" && value.trim() === "");
 }   
@@ -15,9 +15,7 @@ function isEmpty(value) {
 async function loadUI() {
   const all = await loadFromStorage(null);
   const storageJson = JSON.stringify(all);
-  
-  // console.log(storageJson);
-  
+    
   const result = JSON.parse(load_display_data(storageJson));
   // console.log(`Has_identity: ${result.has_identity}`);
 
@@ -71,7 +69,7 @@ async function main() {
   document.getElementById("create-identity-btn").addEventListener("click", async () => {
     const username = document.getElementById("username-input").value;
     const result = JSON.parse(create_identity(username));
-    // console.log(result.username);
+    // console.log(result.display);
 
     if (result.success) {
       for (const w of result.write) {
@@ -91,8 +89,8 @@ async function main() {
     const nickname = document.getElementById('friend-nickname').value || null;
     const publicKey = document.getElementById('friend-pubkey').value;
 
-    // const stored = await chrome.storage.local.get("friend_index");
-    const stored = await loadFromStorage("friend-index");
+    const stored = await chrome.storage.local.get("friend_index");
+    // const stored = await loadFromStorage("friend_index"); // loadFromStorage is Buggy
     const currentIndexJson = stored.friend_index ?? "[]";
 
     const result = JSON.parse(add_friend(nickname, publicKey, currentIndexJson));
