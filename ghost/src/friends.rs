@@ -11,26 +11,30 @@ pub struct Friend {
     pub key_id: String
 }
 
-pub fn create_friend(nickname: Option<String>, public_key: String) -> Result<Friend, String> {
-    let decoded_public_key = STANDARD.decode(&public_key);
-    
-    match decoded_public_key {
+pub fn create_friend(nickname: Option<String>, public_key: String, key_id: String) -> Result<Friend, String> {
+    match STANDARD.decode(&public_key){
         Ok(bytes) => {
-            let key_id = public_key[0..5].to_string(); // public_key is already base64 encoded
+            if public_key.trim().is_empty() {
+                return Err("Public key is required to add a friend!".to_string())
+            };
 
             // Isn't this how we check the length of a string?
+            // Yes, when decoded, the length of the chars would be 32 
+            // But if we checked before decoding, the length would be 44
+            // Both valid
             if bytes.len() != 32{
                 return Err("Invalid encoding!".to_string())
             }
             
             Ok(Friend {
-                nickname,
+                nickname ,
                 public_key,
                 key_id
             })
         }
         Err(_) => {
-            Err("Invalid key!".to_string())
+            Err("Error occured while decoding public key!".to_string())
         }
     }
 }
+

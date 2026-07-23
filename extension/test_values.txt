@@ -1,5 +1,10 @@
+# Old/Invalid for creating friends:
 Public Key:
 2JFSwAfTl8YdFnc/I+JLvX0IhegArikk+cPNHHjpjE4=
 
-Public Key:
+Public Key (in rs, .len() = 44)
 lbkfYgGyIRpo4w8qaXxjik8x9G8IrrrKzrxkR/SNbSM=
+
+# New/Valid:
+Invite key:
+ghl:V/uAF4nN94xt9saSDytlmyjMuvcDJgIdE2Wl+80dc2M=

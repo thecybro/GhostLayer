@@ -26,7 +26,7 @@ async function loadUI() {
     document.getElementById("create-identity-btn").style.display = "none";
     document.getElementById("username").textContent = result.username;
     document.getElementById("username-input").style.display = "none";
-
+    
     if (isEmpty(result.username)) {
       document.getElementById("key-label").textContent = "KeyID";
       document.getElementById("key-id").textContent = result.identity_key_id;
@@ -79,7 +79,8 @@ async function main() {
         // console.log(`Set value: ${w.key}, ${w.value}`)
         // console.log(w.value);
       }
-      notify(`Identity "${result.display}" has been created!` , "success");
+      notify(`Identity "${result.display}" has been created!`, "success");
+      console.log(`Identity "${result.display}" has been created!`);
     } else {
       notify(result.error, "error");
     }
@@ -88,13 +89,14 @@ async function main() {
 
   document.getElementById("add-friend-btn").addEventListener("click", async () => {
     const nickname = document.getElementById('friend-nickname').value || null;
-    const publicKey = document.getElementById('friend-pubkey').value;
-
+    // const publicKey = document.getElementById('friend-pubkey').value;
+    const inviteKey = document.getElementById('friend-pubkey').value;
+    
     // const stored = await chrome.storage.local.get("friend_index");
     const stored = await loadFromStorage("friend_index"); // loadFromStorage is fixed, maybe?
     const currentIndexJson = stored.friend_index ?? "[]";
 
-    const result = JSON.parse(add_friend(nickname, publicKey, currentIndexJson));
+    const result = JSON.parse(add_friend(nickname, inviteKey, currentIndexJson));
 
     if (result.success) {
       for (const w of result.write) {
@@ -102,6 +104,7 @@ async function main() {
         await saveToStorage(w.key, w.value);
       }
       notify(`Friend "${result.display}" has been added!`, "success");
+      // console.log(`Friend "${result.display}" has been added!`);
     } else {
       notify(result.error, "error");
     }
@@ -115,10 +118,23 @@ async function main() {
   document.getElementById("copy-invite-btn").addEventListener("click", async () => {
     const all = await loadFromStorage(null);
     const storageJson = JSON.stringify(all);
-    try {
-      let result = await copy_to_clipboard(storageJson, "public_key");
-      notify(`Copied public key "${result.slice(0,4)}.." to clipboard!`, "success");
+    // console.log("storageJson: ", storageJson);
+    try{
+      let result_raw = await copy_to_clipboard(storageJson, "invite_key");
+      const result = JSON.parse(result_raw);
+      // console.log("Result: ", result);
+      // console.log("result.success", result.success);
+      if (result.success) {
+        notify(`Copied invite key "${result.display}" to clipboard!`, "success");
+        console.log(`Copied invite key "${result.display}" to clipboard!`);
+        // console.log("In result.success block right now!");
+        // console.log(result.display);
+      } else {
+        // console.log("in result.error block of else right now")
+        notify(result.error, "error");
+      }
     } catch (err) {
+      // console.log("In err block of catch right now")
       notify(err, "error");
     }
   });

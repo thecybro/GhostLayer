@@ -2,9 +2,6 @@ use serde_json;
 use serde::Serialize;
 use crate::identity::Identity;
 use crate::friends::Friend;
-use web_sys::window;
-use wasm_bindgen::JsValue;
-use wasm_bindgen_futures::JsFuture;
 
 // Commented this and friend_display_from_json because FriendDisplay was identical to Friend
 // #[derive(Serialize, Deserialize)]
@@ -136,27 +133,3 @@ pub fn parse_storage(storage_json: String) -> LoadResult {
         friends: friends,
     }
 }
-
-pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<String, JsValue> {
-    let window = window().ok_or_else(|| JsValue::from_str("No global window found"))?;
-    let clipboard = window.navigator().clipboard();
-
-    let parsed_data = parse_storage(storage_json);
-    let item = item.to_lowercase();
-
-    let text = match item.as_str() {
-        "public_key" => {
-            if !parsed_data.has_identity {
-                return Err(JsValue::from_str("No identity found!"));
-            }
-            parsed_data.public_key.unwrap_or_default()
-        }
-        "username" => parsed_data.username.unwrap_or_default(),
-        _ => return Err(JsValue::from_str("Invalid clipboard item")),
-    };
-
-    JsFuture::from(clipboard.write_text(&text)).await?;
-
-    Ok(text)
-}
-
