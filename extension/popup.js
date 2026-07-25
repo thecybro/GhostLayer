@@ -1,6 +1,6 @@
 import init, { create_identity, add_friend, load_display_data, copy_to_clipboard } from "./pkg/ghost.js";
 import { saveToStorage, loadFromStorage } from "./storage.js";
-chrome
+
 function notify(text, type = "") {
   const el = document.getElementById("notification");
   el.textContent = text;
@@ -79,7 +79,7 @@ async function main() {
         // console.log(`Set value: ${w.key}, ${w.value}`)
         // console.log(w.value);
       }
-      notify(`Identity "${result.display}" has been created!`, "success");
+      notify(`Identity "..(see console)" has been created!`, "success");
       console.log(`Identity "${result.display}" has been created!`);
     } else {
       notify(result.error, "error");
@@ -125,7 +125,7 @@ async function main() {
       // console.log("Result: ", result);
       // console.log("result.success", result.success);
       if (result.success) {
-        notify(`Copied invite key "${result.display}" to clipboard!`, "success");
+        notify(`Copied invite key "${result.display.slice(0, 5)}.." to clipboard!`, "success");
         console.log(`Copied invite key "${result.display}" to clipboard!`);
         // console.log("In result.success block right now!");
         // console.log(result.display);
@@ -137,6 +137,10 @@ async function main() {
       // console.log("In err block of catch right now")
       notify(err, "error");
     }
+  });
+
+  document.getElementById("settings-link").addEventListener("click", () => {
+    window.location.href = "test.html";
   });
 }
 

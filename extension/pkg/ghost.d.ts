@@ -9,6 +9,8 @@ export function create_identity(username?: string | null): string;
 
 export function load_display_data(storage_json: string): string;
 
+export function test_encrypt_roundtrip(my_private_b64: string, their_public_b64: string, message: string): string;
+
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
@@ -17,6 +19,7 @@ export interface InitOutput {
     readonly copy_to_clipboard: (a: number, b: number, c: number, d: number) => any;
     readonly create_identity: (a: number, b: number) => [number, number];
     readonly load_display_data: (a: number, b: number) => [number, number];
+    readonly test_encrypt_roundtrip: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly wasm_bindgen_7815ba1f1746f71b___convert__closures_____invoke___wasm_bindgen_7815ba1f1746f71b___JsValue__core_9b3796e30d99ddb7___result__Result_____wasm_bindgen_7815ba1f1746f71b___JsError___true_: (a: number, b: number, c: any) => [number, number];
     readonly wasm_bindgen_7815ba1f1746f71b___convert__closures_____invoke___js_sys_2c04299f1b2b182f___Function_fn_wasm_bindgen_7815ba1f1746f71b___JsValue_____wasm_bindgen_7815ba1f1746f71b___sys__Undefined___js_sys_2c04299f1b2b182f___Function_fn_wasm_bindgen_7815ba1f1746f71b___JsValue_____wasm_bindgen_7815ba1f1746f71b___sys__Undefined_______true_: (a: number, b: number, c: any, d: any) => void;
     readonly __wbindgen_exn_store: (a: number) => void;

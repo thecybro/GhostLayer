@@ -7,6 +7,7 @@ mod friends;
 mod storage;
 mod parser;
 mod clipboard;
+mod crypto;
 
 #[derive(Serialize)]
 pub struct StorageWrite {
@@ -40,12 +41,15 @@ pub fn create_identity(username: Option<String>) -> String {
         .filter(|s| !s.is_empty())
         .unwrap_or(&identity.key_id)
         .clone();
+    
+        // let public_key = &identity.public_key.to_string();
+        // let private_key = &identity.private_key.to_string();
     let result = FunctionResult {
         success: true,
         username: username,
         error: None,
         display: display.to_string(),
-        // display: identity.public_key.to_string(),
+        // display: format!("Public_key: {public_key}, Private_key: {private_key}"),
         write: vec! [
             StorageWrite {
                 key: "identity".to_string(), value: storage::identity_to_json(&identity)
@@ -226,4 +230,32 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
         }
     };
     Ok(serde_json::to_string(&result).unwrap())
+}
+
+#[wasm_bindgen]
+pub fn test_encrypt_roundtrip(my_private_b64: String, their_public_b64: String, message: String) -> String {
+    use base64::{engine::general_purpose, Engine };
+
+    let key_bytes = match crypto::compute_shared_secret(&my_private_b64, &their_public_b64) {
+        Ok(k) => k,
+        Err(e) => return format!("KEY DERIVATION FAILED: {}", e),
+    };
+
+    let (nonce, ciphertext) = crypto::encrypt_message(&key_bytes, &message);
+
+    let nonce_b64 = general_purpose::STANDARD.encode(&nonce);
+    let ciphertext_b64 = general_purpose::STANDARD.encode(&ciphertext);
+
+    let decrypted = match crypto::decrypt_text(&key_bytes, nonce, ciphertext) {
+        Ok(text) => text,
+        Err(e) => return format!(
+            "Original: {}\nNonce: {}\nCiphertext: {}\nDECRYPT FAILED: {}",
+            message, nonce_b64, ciphertext_b64, e
+        ),
+    };
+
+    format!(
+        "Original: {}    \nNonce: {}\n      Ciphertext/encrypted: {}\n     Decrypted: {}\n     Match: {}",
+        message, nonce_b64, ciphertext_b64, decrypted, message == decrypted
+    )
 }
