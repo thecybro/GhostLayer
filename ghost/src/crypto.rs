@@ -42,3 +42,4 @@ pub fn compute_shared_secret(my_private_b64: &str, their_public_b64: &str) -> Re
     let shared = my_secret.diffie_hellman(&their_public);
     Ok(*shared.as_bytes())
 }
+
