@@ -4,7 +4,7 @@ import {
   createIdentity,
   addFriend,
   copyToClipboard
-} from "./background/background.js";
+} from "./background/index.js";
 
 
 function notify(text, type = "") {
