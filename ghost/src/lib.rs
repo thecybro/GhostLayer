@@ -260,36 +260,6 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
     Ok(serde_json::to_string(&result).unwrap())
 }
 
-// This function worked fine when I tested it across Js and wasm,
-// Now I want to split the logic into 2 files encrypt and decrypt
-// This test_.. is a temporary function that i will delete soon
-// #[wasm_bindgen]
-// pub fn test_encrypt_roundtrip(my_private_b64: String, their_public_b64: String, message: String) -> String {
-//     use base64::{engine::general_purpose, Engine };
-
-//     let key_bytes = match crypto::compute_shared_secret(&my_private_b64, &their_public_b64) {
-//         Ok(k) => k,
-//         Err(e) => return format!("KEY DERIVATION FAILED: {}", e),
-//     };
-
-//     let (nonce, ciphertext) = crypto::encrypt_message(&key_bytes, &message);
-
-//     let nonce_b64 = general_purpose::STANDARD.encode(&nonce);
-//     let ciphertext_b64 = general_purpose::STANDARD.encode(&ciphertext);
-
-//     let decrypted = match crypto::decrypt_text(&key_bytes, nonce, ciphertext) {
-//         Ok(text) => text,
-//         Err(e) => return format!(
-//             "Original: {}\nNonce: {}\nCiphertext: {}\nDECRYPT FAILED: {}",
-//             message, nonce_b64, ciphertext_b64, e
-//         ),
-//     };
-
-//     format!(
-//         "Original: {}    \nNonce: {}\n      Ciphertext/encrypted: {}\n     Decrypted: {}\n     Match: {}",
-//         message, nonce_b64, ciphertext_b64, decrypted, message == decrypted
-//     )
-// }
 
 #[wasm_bindgen]
 pub fn encrypt(

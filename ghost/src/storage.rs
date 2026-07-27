@@ -3,13 +3,6 @@ use serde::Serialize;
 use crate::identity::Identity;
 use crate::friends::Friend;
 
-// Commented this and friend_display_from_json because FriendDisplay was identical to Friend
-// #[derive(Serialize, Deserialize)]
-// pub struct Friend {
-//     pub nickname: Option<String>,
-//     pub public_key: String,
-//     pub key_id: String,
-// }
 
 #[derive(Serialize)]
 pub struct LoadResult {
@@ -69,13 +62,6 @@ pub fn add_to_index(index: &Vec<String>, public_key: &str) -> Result<Vec<String>
     
 }
 
-// Commented this and FriendDisplay because FriendDisplay was identical to Friend
-// pub fn friend_from_json(json: &str) -> Result<Friend, String> {
-//     match serde_json::from_str::<Friend>(json) {
-//         Ok(friend) => Ok(friend),
-//         Err(_) => Err("Couldn't convert driend display from json!".to_string())
-//     }
-// }
 
 fn get_identity(parsed: &serde_json::Value) -> Identity {
     let identity_str = parsed["identity"].as_str().unwrap();

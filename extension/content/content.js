@@ -1,3 +1,4 @@
+
 async function encryptCurrentMessage() {
     const textarea = document.querySelector("textarea");
 

@@ -2,7 +2,10 @@ import init, {
   create_identity,
   add_friend,
   load_display_data,
-  copy_to_clipboard
+  copy_to_clipboard,
+
+  encrypt,
+  decrypt,
 } from "../pkg/ghost.js";
 
 import {
@@ -88,4 +91,59 @@ export async function loadDisplayData() {
   const storageJson = JSON.stringify(all);
 
   return JSON.parse(load_display_data(storageJson));
+}
+
+async function getIdentity() {
+  const stored = await loadFromStorage("identity");
+
+  if (!stored.identity) {
+    return null;
+  }
+  try {
+    return JSON.parse(stored.identity);
+  } catch {
+    throw new err("Stored identity contains invalid JSON");
+   }
+}
+
+export async function encryptMessage(their_public_b64, message) {
+  const identity = await getIdentity();
+  const my_private_b64 = identity.private_key;
+
+  const result = encrypt(my_private_b64, their_public_b64, message);
+
+  if (result.success) {
+    return {
+      display: result.display, // extra success block here but not in upper functions because
+      success: true,           // they needed the success/error status for notificatoin, but
+      status: "success"        // these might not, so these can directly check true/false and execute
+    };
+  } else {
+    return {
+      display: result.display,
+      success: false,
+      status: "error"
+    }
+  }
+}
+
+export async function decryptMessage(their_public_b64, nonce, ciphertext) {
+  const identity = await getIdentity();
+  const my_private_b64 = identity.private_key;
+
+  const result = decrypt(my_private_b64, their_public_b64, nonce, ciphertext);
+
+  if (result.success) {
+    return {
+      display: result.display,
+      success: true,
+      status: "success"
+    };
+  } else {
+    return {
+      display: result.display,
+      success: true,
+      status: "error"
+    };
+  }
 }
