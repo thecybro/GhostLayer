@@ -86,7 +86,7 @@ pub fn add_friend(nickname: Option<String>, invite_key: String, current_index_js
                 .filter(|n| !n.trim().is_empty())
                 .unwrap_or_else(|| nickname_from_key.clone()).to_string());
             
-            match friends::create_friend(nickname.clone(), public_key, key_id) {
+            match friends::create_friend(&nickname, public_key, key_id) {
                 Ok(friend) => {
                     // when there aren't any friends yet
                     let index = storage::index_from_json(&current_index_json).unwrap_or_default(); 
@@ -132,7 +132,7 @@ pub fn add_friend(nickname: Option<String>, invite_key: String, current_index_js
                         username: None,
                         error: Some(e),
                         nonce: None,
-                        display: "Couldn't create friend".to_string(),
+                        display: "Couldn't create friend!".to_string(),
                         write: vec![]
                         };
                     serde_json::to_string(&result).unwrap()

@@ -1,5 +1,5 @@
-import init, { create_identity, add_friend, load_display_data, copy_to_clipboard } from "./pkg/ghost.js";
-import { saveToStorage, loadFromStorage } from "./storage.js";
+import init, { create_identity, add_friend, load_display_data, copy_to_clipboard } from "./background/background.js";
+import { saveToStorage, loadFromStorage } from "./storage/storage.js";
 
 function notify(text, type = "") {
   const el = document.getElementById("notification");
@@ -140,7 +140,7 @@ async function main() {
   });
 
   document.getElementById("settings-link").addEventListener("click", () => {
-    window.location.href = "test.html";
+    window.location.href = "tests/test.html";
   });
 }
 
