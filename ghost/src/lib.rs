@@ -61,7 +61,7 @@ pub fn create_identity(username: Option<String>) -> String {
         username: username,
         error: None,
         nonce: None,
-        display: display.to_string(),
+        display: format!("Identity {display} has been created!").to_string(),
         // display: format!("Public_key: {public_key}, Private_key: {private_key}"),
         write: vec! [
             StorageWrite {
@@ -86,11 +86,12 @@ pub fn add_friend(nickname: Option<String>, invite_key: String, current_index_js
                 .filter(|n| !n.trim().is_empty())
                 .unwrap_or_else(|| nickname_from_key.clone()).to_string());
             
-            match friends::create_friend(nickname, public_key, key_id) {
+            match friends::create_friend(nickname.clone(), public_key, key_id) {
                 Ok(friend) => {
                     // when there aren't any friends yet
                     let index = storage::index_from_json(&current_index_json).unwrap_or_default(); 
                     let new_index = storage::add_to_index(&index, &friend.public_key);
+                    let display = nickname.unwrap_or_else(|| friend.key_id.to_string());
                     match new_index {
                         Ok(n_index) => {
                             let result = FunctionResult {
@@ -98,7 +99,7 @@ pub fn add_friend(nickname: Option<String>, invite_key: String, current_index_js
                                 username: None,
                                 error: None,
                                 nonce: None,
-                                display: friend.key_id.to_string(),
+                                display: format!("Friend {display} has been created!").to_string(),
                                 write: vec![
                                     StorageWrite { // json with details of one friend
                                         key: storage::friend_key(&friend.public_key),
@@ -180,14 +181,15 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
                     write: vec![] 
                 }
             } else {
-                let text = parsed_data.public_key.unwrap_or_default();
+                let text = parsed_data.identity_key_id.unwrap_or_default();
+                let display = text.clone().to_string();
                 clipboard::copy_to_clipboard(text.clone()).await?; // only happens here, inside success
                 FunctionResult { 
                     success: true,
                     username: None,
                     error: None,
                     nonce: None,
-                    display: text.clone().to_string(),
+                    display: format!("Public key {display}.. was copied to clipboard",).to_string(),
                     write: vec![] 
                 }
             }
@@ -206,13 +208,14 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
                 }
             } else {
                     let text = parsed_data.username.unwrap_or_default();
+                    let display = text.clone().to_string();
                     clipboard::copy_to_clipboard(text.clone()).await?;
                     FunctionResult {
                         success: true,
                         username: Some(text.clone().to_string()),
                         error: None,
                         nonce: None,
-                        display: text.clone().to_string(),
+                        display: format!("Username {display} was copied to clipboard").to_string(),
                         write: vec![]
                     }
                 }
@@ -231,13 +234,14 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
                 let public_key = parsed_data.public_key.unwrap_or_default();
                 let username = Some(parsed_data.username.unwrap_or_default());
                 let text = parser::create_invite_key(public_key, username).to_string();
+                let display = &text.clone()[0..6];
                 clipboard::copy_to_clipboard(text.clone()).await?; // only happens here, inside success
                 FunctionResult { 
                     success: true,
                     username: None,
                     error: None,
                     nonce: None,
-                    display: text.clone().to_string(),
+                    display: format!("Invite key {display} has been copied to clipboard!").to_string(),
                     write: vec![] 
                 }
             }
@@ -288,18 +292,23 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
 // }
 
 #[wasm_bindgen]
-pub fn encrypt( my_private_b64: String, their_public_b64: String, message: String ) -> String {
+pub fn encrypt(
+    my_private_b64: String,
+    their_public_b64: String,
+    message: String ) -> String {
+        
     use base64::{engine::general_purpose::STANDARD, Engine};
 
     let key_bytes = match crypto::compute_shared_secret(&my_private_b64, &their_public_b64) {
         Ok(k) => k,
         Err(e) => {
+            let display = &e.clone();
             return serde_json::to_string(&FunctionResult {
                 success: false,
                 username: None,
                 error: Some(e),
                 nonce: None,
-                display: String::new(),
+                display: format!("Error: {display}").to_string(),
                 write: vec![],
             })
             .unwrap();
@@ -321,7 +330,12 @@ pub fn encrypt( my_private_b64: String, their_public_b64: String, message: Strin
 }
 
 #[wasm_bindgen]
-pub fn decrypt( my_private_b64: String, their_public_b64: String, nonce_b64: String, ciphertext_b64: String ) -> String {
+pub fn decrypt(
+    my_private_b64: String,
+    their_public_b64: String,
+    nonce_b64: String,
+    ciphertext_b64: String ) -> String {
+        
     use base64::{engine::general_purpose::STANDARD, Engine};
 
     let key_bytes = match crypto::compute_shared_secret(&my_private_b64, &their_public_b64) {
@@ -332,7 +346,7 @@ pub fn decrypt( my_private_b64: String, their_public_b64: String, nonce_b64: Str
                 username: None,
                 error: Some(e),
                 nonce: None,
-                display: String::new(),
+                display: "Error occured while decrypting!".to_string(),
                 write: vec![],
             })
             .unwrap();
@@ -347,7 +361,7 @@ pub fn decrypt( my_private_b64: String, their_public_b64: String, nonce_b64: Str
                 username: None,
                 error: Some("Invalid nonce".to_string()),
                 nonce: None,
-                display: String::new(),
+                display: "Error occured while decrypting!".to_string(),
                 write: vec![],
             })
             .unwrap();
@@ -362,7 +376,7 @@ pub fn decrypt( my_private_b64: String, their_public_b64: String, nonce_b64: Str
                 username: None,
                 error: Some("Invalid ciphertext".to_string()),
                 nonce: None,
-                display: String::new(),
+                display: "Error occured while decrypting!".to_string(),
                 write: vec![],
             })
             .unwrap();
@@ -377,7 +391,7 @@ pub fn decrypt( my_private_b64: String, their_public_b64: String, nonce_b64: Str
                 username: None,
                 error: Some(e),
                 nonce: None,
-                display: String::new(),
+                display: "Error occured while decrypting!".to_string(),
                 write: vec![],
             })
             .unwrap();
