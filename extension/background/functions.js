@@ -84,6 +84,8 @@ export async function copyToClipboard(item) {
   }
 }
 
+// the public key it returns is our public public_key
+// to ge the public key of friend, we do friend.public_key
 export async function loadDisplayData() {
   await wasmReady;
 
@@ -108,42 +110,60 @@ async function getIdentity() {
 
 export async function encryptMessage(their_public_b64, message) {
   const identity = await getIdentity();
-  const my_private_b64 = identity.private_key;
 
-  const result = encrypt(my_private_b64, their_public_b64, message);
-
-  if (result.success) {
+  if (!identity) {
     return {
-      display: result.display, // extra success block here but not in upper functions because
-      success: true,           // they needed the success/error status for notificatoin, but
-      status: "success"        // these might not, so these can directly check true/false and execute
+      succcess: false,
+      status: "error",
+      display: "No identity found!"
     };
-  } else {
-    return {
-      display: result.display,
-      success: false,
-      status: "error"
-    }
   }
+
+  
+  const my_private_b64 = identity.private_key;
+  const my_public_b64 = identity.public_key;
+  
+  const result = JSON.parse(
+    encrypt(my_public_b64, my_private_b64, their_public_b64, message)
+  );
+
+  return {
+      display: result.display,
+      success: result.success,
+      status: result.success ? "success" : "error",
+  
+      // Keep the real Rust error available for debugging.
+      error: result.error ?? null,
+  
+      // Assuming message_key contains the complete outgoing encrypted message.
+      messageKey: result.message_key ?? null,
+    };
 }
 
 export async function decryptMessage(their_public_b64, nonce, ciphertext) {
   const identity = await getIdentity();
-  const my_private_b64 = identity.private_key;
 
-  const result = decrypt(my_private_b64, their_public_b64, nonce, ciphertext);
-
-  if (result.success) {
+  if (!identity) {
     return {
-      display: result.display,
-      success: true,
-      status: "success"
-    };
-  } else {
-    return {
-      display: result.display,
-      success: true,
-      status: "error"
+      success: false,
+      status: "error",
+      display: "No identity found!"
     };
   }
+  
+  const my_private_b64 = identity.private_key;
+
+  const result = JSON.parse(
+    decrypt(my_private_b64, their_public_b64, nonce, ciphertext)
+  );
+
+  return {
+      display: result.display,
+      success: result.success,
+      status: result.success ? "success" : "error",
+  
+      error: result.error ?? null,
+  
+      messageKey: result.message_key ?? null,
+    };
 }

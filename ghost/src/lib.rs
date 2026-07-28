@@ -20,9 +20,17 @@ pub struct FunctionResult {
     pub success: bool,
     pub username: Option<String>,
     pub error: Option<String>,
-    pub nonce: Option<String>, // used to return nonce for encryption/decryption
     pub display: String, // info to show to user, eg: key_id
     pub write: Vec<StorageWrite>,
+}
+
+#[derive(Serialize)]
+pub struct CryptoFunctionResult {
+    pub success: bool,
+    pub error: Option<String>,
+    pub nonce: Option<String>,
+    pub display: String,
+    pub message_key: Option<String>,
 }
 
 // #[derive(Serialize)]
@@ -60,7 +68,6 @@ pub fn create_identity(username: Option<String>) -> String {
         success: true,
         username: username,
         error: None,
-        nonce: None,
         display: format!("Identity {display} has been created!").to_string(),
         // display: format!("Public_key: {public_key}, Private_key: {private_key}"),
         write: vec! [
@@ -75,7 +82,7 @@ pub fn create_identity(username: Option<String>) -> String {
 // Error handling is not yet as well done
 #[wasm_bindgen]
 pub fn add_friend(nickname: Option<String>, invite_key: String, current_index_json: String) -> String {
-    match parser::extract_details_from_invite_key(invite_key) {
+    match parser::extract_details_from_invite_key(&invite_key) {
         Ok(details) => {
             let public_key = details.public_key;
             let nickname_from_key = details.nickname;
@@ -84,7 +91,7 @@ pub fn add_friend(nickname: Option<String>, invite_key: String, current_index_js
             // use nickname if given, if not, use the nickname that came from key
             let nickname = Some(nickname 
                 .filter(|n| !n.trim().is_empty())
-                .unwrap_or_else(|| nickname_from_key.clone()).to_string());
+                .unwrap_or_else(|| nickname_from_key.unwrap_or_default()));
             
             match friends::create_friend(&nickname, public_key, key_id) {
                 Ok(friend) => {
@@ -98,7 +105,6 @@ pub fn add_friend(nickname: Option<String>, invite_key: String, current_index_js
                                 success: true,
                                 username: None,
                                 error: None,
-                                nonce: None,
                                 display: format!("Friend {display} has been created!").to_string(),
                                 write: vec![
                                     StorageWrite { // json with details of one friend
@@ -118,7 +124,6 @@ pub fn add_friend(nickname: Option<String>, invite_key: String, current_index_js
                                 success: false,
                                 username: None,
                                 error: Some(e),
-                                nonce: None,
                                 display: "Couldn't add friend details to storage!".to_string(),
                                 write: vec![]
                                 };
@@ -131,7 +136,6 @@ pub fn add_friend(nickname: Option<String>, invite_key: String, current_index_js
                         success: false,
                         username: None,
                         error: Some(e),
-                        nonce: None,
                         display: "Couldn't create friend!".to_string(),
                         write: vec![]
                         };
@@ -144,7 +148,6 @@ pub fn add_friend(nickname: Option<String>, invite_key: String, current_index_js
                 success: false,
                 username: None,
                 error: Some(e),
-                nonce: None,
                 display: "Invalid invite key!".to_string(),
                 write: vec![]
                 };
@@ -176,7 +179,6 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
                     success: false,
                     username: None,
                     error: Some("Public key doesn't exist without identity!".to_string()),
-                    nonce: None,
                     display: "No identity found!".to_string(),
                     write: vec![] 
                 }
@@ -188,7 +190,6 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
                     success: true,
                     username: None,
                     error: None,
-                    nonce: None,
                     display: format!("Public key {display}.. was copied to clipboard",).to_string(),
                     write: vec![] 
                 }
@@ -202,7 +203,6 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
                     success: false,
                     username: None,
                     error: Some("Username doesn't exist without identity!".to_string()),
-                    nonce: None,
                     display: "No identity!".to_string(),
                     write: vec![]
                 }
@@ -214,7 +214,6 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
                         success: true,
                         username: Some(text.clone().to_string()),
                         error: None,
-                        nonce: None,
                         display: format!("Username {display} was copied to clipboard").to_string(),
                         write: vec![]
                     }
@@ -226,21 +225,22 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
                     success: false,
                     username: None,
                     error: Some("Invite key doesn't exist without identity!".to_string()),
-                    nonce: None,
                     display: "No identity found!".to_string(),
                     write: vec![] 
                 }
             } else {
                 let public_key = parsed_data.public_key.unwrap_or_default();
-                let username = Some(parsed_data.username.unwrap_or_default());
-                let text = parser::create_invite_key(public_key, username).to_string();
+                
+                // Converts Option<String> into Option<&str>.
+                let username = parsed_data.username.as_deref();
+                let text = parser::create_invite_key(&public_key, username);
                 let display = &text.clone()[0..6];
+                
                 clipboard::copy_to_clipboard(text.clone()).await?; // only happens here, inside success
                 FunctionResult { 
                     success: true,
                     username: None,
                     error: None,
-                    nonce: None,
                     display: format!("Invite key {display} has been copied to clipboard!").to_string(),
                     write: vec![] 
                 }
@@ -251,7 +251,6 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
                 success: false,
                 username: None,
                 error: Some("Invalid item".to_string()),
-                nonce: None,
                 display: "Invalid item".to_string(),
                 write: vec![]
             }
@@ -263,6 +262,7 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
 
 #[wasm_bindgen]
 pub fn encrypt(
+    my_public_b64: String,
     my_private_b64: String,
     their_public_b64: String,
     message: String ) -> String {
@@ -273,27 +273,36 @@ pub fn encrypt(
         Ok(k) => k,
         Err(e) => {
             let display = &e.clone();
-            return serde_json::to_string(&FunctionResult {
+            return serde_json::to_string(&CryptoFunctionResult {
                 success: false,
-                username: None,
                 error: Some(e),
                 nonce: None,
                 display: format!("Error: {display}").to_string(),
-                write: vec![],
+                message_key: None,
             })
             .unwrap();
         }
     };
 
     let (nonce, ciphertext) = crypto::encrypt_message(&key_bytes, &message);
-
-    let result = FunctionResult {
+    let nonce_b64 = STANDARD.encode(&nonce);
+    let ciphertext_b64 = STANDARD.encode(&ciphertext);
+    
+    let message_key = match parser::create_message_key(
+        &my_public_b64,
+        &nonce_b64,
+        &ciphertext_b64
+    ) {
+        Ok(key) => key,
+        Err(e) => e,
+    };
+    
+    let result = CryptoFunctionResult {
         success: true,
-        username: None,
         error: None,
-        nonce: Some(STANDARD.encode(&nonce)),
-        display: STANDARD.encode(&ciphertext),
-        write: vec![],
+        nonce: Some(nonce_b64),
+        display: STANDARD.encode(&ciphertext_b64),
+        message_key: Some(message_key.to_string()),
     };
 
     serde_json::to_string(&result).unwrap()
@@ -302,22 +311,36 @@ pub fn encrypt(
 #[wasm_bindgen]
 pub fn decrypt(
     my_private_b64: String,
-    their_public_b64: String,
-    nonce_b64: String,
-    ciphertext_b64: String ) -> String {
+    message_key: String ) -> String {
         
     use base64::{engine::general_purpose::STANDARD, Engine};
+        
+    let details = match parser::extract_details_from_message_key(&message_key) {
+        Ok(detail) => detail,
+        Err(e) => {
+            return serde_json::to_string(&CryptoFunctionResult {
+                success: false,
+                error: Some(e),
+                nonce: None,
+                display: "Error occured while trying to extract details from message key".to_string(),
+                message_key: None,
+            }).unwrap()
+        },
+    };
 
+    let their_public_b64 = details.sender_public_key;
+    let nonce_b64 = details.nonce_b64;
+    let ciphertext_b64 = details.ciphertext_b64;
+    
     let key_bytes = match crypto::compute_shared_secret(&my_private_b64, &their_public_b64) {
         Ok(k) => k,
         Err(e) => {
-            return serde_json::to_string(&FunctionResult {
+            return serde_json::to_string(&CryptoFunctionResult {
                 success: false,
-                username: None,
                 error: Some(e),
                 nonce: None,
                 display: "Error occured while decrypting!".to_string(),
-                write: vec![],
+                message_key: None,
             })
             .unwrap();
         }
@@ -326,13 +349,12 @@ pub fn decrypt(
     let nonce = match STANDARD.decode(&nonce_b64) {
         Ok(n) => n,
         Err(_) => {
-            return serde_json::to_string(&FunctionResult {
+            return serde_json::to_string(&CryptoFunctionResult {
                 success: false,
-                username: None,
                 error: Some("Invalid nonce".to_string()),
                 nonce: None,
                 display: "Error occured while decrypting!".to_string(),
-                write: vec![],
+                message_key: None,
             })
             .unwrap();
         }
@@ -341,13 +363,12 @@ pub fn decrypt(
     let ciphertext = match STANDARD.decode(&ciphertext_b64) {
         Ok(c) => c,
         Err(_) => {
-            return serde_json::to_string(&FunctionResult {
+            return serde_json::to_string(&CryptoFunctionResult {
                 success: false,
-                username: None,
                 error: Some("Invalid ciphertext".to_string()),
                 nonce: None,
                 display: "Error occured while decrypting!".to_string(),
-                write: vec![],
+                message_key: None,
             })
             .unwrap();
         }
@@ -356,25 +377,23 @@ pub fn decrypt(
     let plaintext = match crypto::decrypt_text(&key_bytes, nonce, ciphertext) {
         Ok(text) => text,
         Err(e) => {
-            return serde_json::to_string(&FunctionResult {
+            return serde_json::to_string(&CryptoFunctionResult {
                 success: false,
-                username: None,
                 error: Some(e),
                 nonce: None,
                 display: "Error occured while decrypting!".to_string(),
-                write: vec![],
+                message_key: None,
             })
             .unwrap();
         }
     };
 
-    let result = FunctionResult {
+    let result = CryptoFunctionResult {
         success: true,
-        username: None,
         error: None,
         nonce: None,
         display: plaintext,
-        write: vec![],
+        message_key: None,
     };
 
     serde_json::to_string(&result).unwrap()
