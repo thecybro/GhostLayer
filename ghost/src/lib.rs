@@ -81,23 +81,50 @@ pub fn create_identity(username: Option<String>) -> String {
 
 // Error handling is not yet as well done
 #[wasm_bindgen]
-pub fn add_friend(nickname: Option<String>, invite_key: String, current_index_json: String) -> String {
+pub fn add_friend(
+    nickname: Option<String>, 
+    invite_key: String, 
+    storage_json: String ) -> String {
+    // We need our own identity to add/create friends, so a check here,
+    // the implementation might not be good and might be redundant
+    // but will improve later
+    let parsed_storage = storage::parse_storage(storage_json);
+    if !parsed_storage.has_identity{
+        let result = FunctionResult{
+            success: false,
+            username: None,
+            error: Some("Identity not found!".to_string()),
+            display: "Friends can't be added without having an identity yourself!".to_string(),
+            write: vec![]
+        };
+        return serde_json::to_string(&result).unwrap();
+    }
+        
     match parser::extract_details_from_invite_key(&invite_key) {
         Ok(details) => {
             let public_key = details.public_key;
-            let nickname_from_key = details.nickname;
             let key_id = details.key_id;
         
             // use nickname if given, if not, use the nickname that came from key
-            let nickname = Some(nickname 
+            let nickname = nickname 
                 .filter(|n| !n.trim().is_empty())
-                .unwrap_or_else(|| nickname_from_key.unwrap_or_default()));
-            
-            match friends::create_friend(&nickname, public_key, key_id) {
+                .or_else(|| {
+                    if details.nickname.as_ref()?.trim().is_empty(){
+                        None
+                    } else {
+                        details.nickname // already Some()
+                    }
+                });
+
+            let current_index = parsed_storage.friend_index;
+                // .friend_index
+                // .unwrap_or_default();
+                                
+            match friends::create_friend(nickname.clone(), public_key, key_id) {
                 Ok(friend) => {
                     // when there aren't any friends yet
-                    let index = storage::index_from_json(&current_index_json).unwrap_or_default(); 
-                    let new_index = storage::add_to_index(&index, &friend.public_key);
+                    // let index = storage::index_from_json(&current_index).unwrap_or_default(); 
+                    let new_index = storage::add_to_index(&current_index, &friend.public_key);
                     let display = nickname.unwrap_or_else(|| friend.key_id.to_string());
                     match new_index {
                         Ok(n_index) => {
@@ -127,7 +154,7 @@ pub fn add_friend(nickname: Option<String>, invite_key: String, current_index_js
                                 display: "Couldn't add friend details to storage!".to_string(),
                                 write: vec![]
                                 };
-                            serde_json::to_string(&result).unwrap()
+                            return serde_json::to_string(&result).unwrap()
                         }
                     }
                 },
@@ -139,7 +166,7 @@ pub fn add_friend(nickname: Option<String>, invite_key: String, current_index_js
                         display: "Couldn't create friend!".to_string(),
                         write: vec![]
                         };
-                    serde_json::to_string(&result).unwrap()
+                    return serde_json::to_string(&result).unwrap()
                 },
             }
         },
@@ -151,10 +178,11 @@ pub fn add_friend(nickname: Option<String>, invite_key: String, current_index_js
                 display: "Invalid invite key!".to_string(),
                 write: vec![]
                 };
-            serde_json::to_string(&result).unwrap()
+            return serde_json::to_string(&result).unwrap()
         }
     }
 }
+
 
 #[wasm_bindgen]
 pub fn load_display_data(storage_json: String) -> String {
@@ -301,7 +329,8 @@ pub fn encrypt(
         success: true,
         error: None,
         nonce: Some(nonce_b64),
-        display: STANDARD.encode(&ciphertext_b64),
+        // display: STANDARD.encode(&ciphertext_b64),
+        display: message_key.to_string(),
         message_key: Some(message_key.to_string()),
     };
 

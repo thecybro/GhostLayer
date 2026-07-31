@@ -11,6 +11,7 @@ pub struct LoadResult {
     pub username: Option<String>,
     pub public_key: Option<String>,
     pub friends: Vec<Friend>,
+    pub friend_index: Vec<String>,
 }
 
 pub fn friend_key(public_key: &str) -> String {
@@ -62,8 +63,7 @@ pub fn add_to_index(index: &Vec<String>, public_key: &str) -> Result<Vec<String>
     
 }
 
-
-fn get_identity(parsed: &serde_json::Value) -> Identity {
+pub fn get_identity(parsed: &serde_json::Value) -> Identity {
     let identity_str = parsed["identity"].as_str().unwrap();
     let identity: Identity = identity_from_json(identity_str).unwrap();
     identity
@@ -94,12 +94,15 @@ pub fn parse_storage(storage_json: String) -> LoadResult {
     } else {
         None
     };
+
+    let mut friend_index: Vec<String> = Vec::new();
+    
     let friends = if !parsed["friend_index"].is_null() {
         let friend_index_str = parsed["friend_index"].as_str().unwrap();
-        let friend_index = index_from_json(friend_index_str).unwrap();
+        friend_index = index_from_json(friend_index_str).unwrap();
         let mut friends = Vec::new();
         
-        for public_key in friend_index {
+        for public_key in &friend_index {
             let key = friend_key(&public_key);
             let friend_json = parsed[&key].as_str().unwrap();
             let friend = friend_from_json(friend_json).unwrap();
@@ -117,5 +120,6 @@ pub fn parse_storage(storage_json: String) -> LoadResult {
         username: username,
         public_key: public_key,
         friends: friends,
+        friend_index: friend_index,
     }
 }

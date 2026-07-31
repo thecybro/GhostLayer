@@ -1,7 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export function add_friend(nickname: string | null | undefined, invite_key: string, current_index_json: string): string;
+export function add_friend(nickname: string | null | undefined, invite_key: string, storage_json: string): string;
 
 export function copy_to_clipboard(storage_json: string, item: string): Promise<string>;
 

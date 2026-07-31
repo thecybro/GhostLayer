@@ -3,10 +3,10 @@
 /**
  * @param {string | null | undefined} nickname
  * @param {string} invite_key
- * @param {string} current_index_json
+ * @param {string} storage_json
  * @returns {string}
  */
-export function add_friend(nickname, invite_key, current_index_json) {
+export function add_friend(nickname, invite_key, storage_json) {
     let deferred4_0;
     let deferred4_1;
     try {
@@ -14,7 +14,7 @@ export function add_friend(nickname, invite_key, current_index_json) {
         var len0 = WASM_VECTOR_LEN;
         const ptr1 = passStringToWasm0(invite_key, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len1 = WASM_VECTOR_LEN;
-        const ptr2 = passStringToWasm0(current_index_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const ptr2 = passStringToWasm0(storage_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len2 = WASM_VECTOR_LEN;
         const ret = wasm.add_friend(ptr0, len0, ptr1, len1, ptr2, len2);
         deferred4_0 = ret[0];

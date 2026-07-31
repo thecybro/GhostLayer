@@ -11,7 +11,7 @@ pub struct Friend {
     pub key_id: String
 }
 
-pub fn create_friend(nickname: &Option<String>, public_key: String, key_id: String) -> Result<Friend, String> {
+pub fn create_friend(nickname: Option<String>, public_key: String, key_id: String) -> Result<Friend, String> {
     match STANDARD.decode(&public_key){
         Ok(bytes) => {
             if public_key.trim().is_empty() {
@@ -27,7 +27,7 @@ pub fn create_friend(nickname: &Option<String>, public_key: String, key_id: Stri
             }
             
             Ok(Friend {
-                nickname: nickname.clone() ,
+                nickname: nickname,
                 public_key,
                 key_id
             })

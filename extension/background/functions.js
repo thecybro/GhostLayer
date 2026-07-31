@@ -43,11 +43,14 @@ export async function createIdentity(username) {
 export async function addFriend(nickname, inviteKey) {
   await wasmReady;
 
-  const stored = await loadFromStorage("friend_index");
-  const currentIndexJson = stored.friend_index ?? "[]";
+  const all = await loadFromStorage(null);
+  const storageJson = JSON.stringify(all);
+  
+  // const stored = await loadFromStorage("friend_index");
+  // const currentIndexJson = stored.friend_index ?? "[]";
 
   const result = JSON.parse(
-    add_friend(nickname, inviteKey, currentIndexJson)
+    add_friend(nickname?.trim(), inviteKey, storageJson)
   );
 
   if (result.success) {
@@ -92,7 +95,10 @@ export async function loadDisplayData() {
   const all = await loadFromStorage(null);
   const storageJson = JSON.stringify(all);
 
-  return JSON.parse(load_display_data(storageJson));
+  const result = JSON.parse(load_display_data(storageJson));
+  // console.log(result);
+  return result;
+  // return JSON.parse(load_display_data(storageJson));
 }
 
 async function getIdentity() {
@@ -128,14 +134,15 @@ export async function encryptMessage(their_public_b64, message) {
   );
 
   return {
-      display: result.display,
       success: result.success,
+      display: result.display,
       status: result.success ? "success" : "error",
   
       // Keep the real Rust error available for debugging.
       error: result.error ?? null,
   
-      // Assuming message_key contains the complete outgoing encrypted message.
+      // it contains the message key which is to be replaced with
+      // plaintext and sent
       messageKey: result.message_key ?? null,
     };
 }
