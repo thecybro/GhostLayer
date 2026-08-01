@@ -1,7 +1,46 @@
 // This file talks to the background worker using:
 // await chrome.runtime.sendMessage({ ... })
-length
+
 let activeEditor = null;
+const seenMessages = new WeakSet();
+
+const observer = new MutatioObserver((mutations) => {
+  for (const mutation of mutations) {
+    for (const node of mutation.addedNodes) {
+      if (!(node instanceof HTMLElement)) continue;
+
+      // This is different for each platform, so have to find and replace with appropriate
+      // selectors for each platform
+      const messages = node.matches?.['data-message-id']
+        ? [node]
+        : node.querySelectorAll("['data-message-id']") ?? [];
+
+      for (const message of messages) {
+        if (seenMessages.has(message)) continue;
+        seenMessages.add(message);
+
+        const text = message.innerText?.trim();
+
+        if (text) {
+          console.log(`Incoming message ${text} found`);
+
+          // TODO: Send the text to decrypt it
+          // First show a small decrypt button alongside the
+          // text, send only when it's clicked
+          // 
+          // const decryptedText = await chrome.runtime.SendMessage({
+          //  type: "DECRYPT_MESSAGE"
+          // })
+        }
+      }
+    }
+  }
+});
+
+observer.observe(document.body, {
+  childList: true,
+  subtree: true,
+});
 
 // Remember the last text editor the user focused.
 // Clicking the Encrypt button removes focus from the editor,
@@ -142,6 +181,9 @@ encryptButton.addEventListener("click", async () => {
   );
 });
 
+// decryptionButton.addEventListener("click", async () => {
+  
+// }
 
 function showFriendsSelector(friends) {
   return new Promise((resolve) => {
