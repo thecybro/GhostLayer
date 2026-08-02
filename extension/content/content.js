@@ -24,6 +24,10 @@ const observer = new MutatioObserver((mutations) => {
         if (text) {
           console.log(`Incoming message ${text} found`);
 
+          if (text.startsWith("ghl_message")) {
+            // decoding logic will be added here
+          }
+          
           // TODO: Send the text to decrypt it
           // First show a small decrypt button alongside the
           // text, send only when it's clicked
@@ -31,6 +35,8 @@ const observer = new MutatioObserver((mutations) => {
           // const decryptedText = await chrome.runtime.SendMessage({
           //  type: "DECRYPT_MESSAGE"
           // })
+          // 
+          
         }
       }
     }
