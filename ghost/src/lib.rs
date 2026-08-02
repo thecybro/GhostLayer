@@ -8,6 +8,7 @@ mod storage;
 mod parser;
 mod clipboard;
 mod crypto;
+mod protocol;
 
 #[derive(Serialize)]
 pub struct StorageWrite {
@@ -32,25 +33,6 @@ pub struct CryptoFunctionResult {
     pub display: String,
     pub message_key: Option<String>,
 }
-
-// #[derive(Serialize)]
-// pub struct CryptoResult {
-//     pub success: bool,
-//     pub error: Option<String>,
-//     pub message: String,
-//     pub nonce: Option<String>,
-//     // pub ciphertext: String,
-//     pub display: String, // display is ciphertext after encryption, display is decrypted text after decryption
-//     pub write: Vec<StorageWrite>,
-// }
-
-
-// These are the json types we need:
-// 
-// identity        → { "name": null, "public_key": "...", "private_key": "...", "key_id": "..." }
-// friend_index    → ["<pubkey1>", "<pubkey2>", ...]
-// friend:pubkeyA  → { "nickname": "...", "public_key": "...", "key_id": "..." }
-// friend:pubkeyN
 
 // Error handling is not yet as well done
 #[wasm_bindgen]
