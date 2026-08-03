@@ -77,6 +77,28 @@ async function handleEncryptMessage(message, sendResponse) {
 
 async function handleDecryptMessage(message, sendResponse) {
   try {
-    const result = decryptMessage()
+    const result = decryptMessage(
+      message.messageKey
+    );
+
+    if (result.success) {
+      sendResponse({
+        success: true,
+        display: result.display
+      })
+      
+    } else {
+      sendResponse({
+        success: false,
+        error: result.error
+      });
+    }
+  } catch (error) {
+    sendResponse({
+      success: false,
+      error: error instanceof Error
+        ? error.message
+        : String(error)
+    });
   }
 }

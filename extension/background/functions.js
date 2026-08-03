@@ -147,7 +147,8 @@ export async function encryptMessage(their_public_b64, message) {
     };
 }
 
-export async function decryptMessage(their_public_b64, nonce, ciphertext) {
+// Lmao I had really forgotten to use the messageKey in the decryption part
+export async function decryptMessage(messageKey) {
   const identity = await getIdentity();
 
   if (!identity) {
@@ -161,7 +162,7 @@ export async function decryptMessage(their_public_b64, nonce, ciphertext) {
   const my_private_b64 = identity.private_key;
 
   const result = JSON.parse(
-    decrypt(my_private_b64, their_public_b64, nonce, ciphertext)
+    decrypt(my_private_b64, messageKey)
   );
 
   return {
@@ -171,6 +172,6 @@ export async function decryptMessage(their_public_b64, nonce, ciphertext) {
   
       error: result.error ?? null,
   
-      messageKey: result.message_key ?? null,
+      display: result.display ?? null,
     };
 }
