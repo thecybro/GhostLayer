@@ -12,7 +12,7 @@ ghlV/uAF4nN94xt9saSDytlmyjMuvcDJgIdE2Wl+80dc2M=
 # Test:
 ## Identity 1:
 
-> Invite_key: ghlkKub05heQ+Be+rhxAxM1eRU6PxQk4UZo3ialCarhEgI=Cybro
+> Invite_key: ghlkKub05heQ+Be+rhxAxM1eRU6PxQk4UZo3ialCarhEgI=Bumba
 
 Identity "Public_key: kKub05heQ+Be+rhxAxM1eRU6PxQk4UZo3ialCarhEgI=,
 Private_key: 9n26Q2EnqsZqnnaBPvHVHRluxPgLGp4jS6u6EF5ZaLU=" has been created!

@@ -21,6 +21,8 @@ function isEmpty(value) {
 async function loadUI() {
   const result = await loadDisplayData();
 
+  // console.log(result);
+  
   if (result.has_identity) {
     document.getElementById("create-identity-btn").style.display = "none";
     document.getElementById("username").textContent = result.username ?? "";
