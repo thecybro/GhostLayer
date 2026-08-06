@@ -4,6 +4,10 @@ use base64::{
     engine::general_purpose::STANDARD,
 };
 
+use crate::types::{FunctionResult, StorageWrite};
+use crate::parser;
+use crate::storage;
+
 #[derive(Serialize, Deserialize)]
 pub struct Friend {
     pub nickname: Option<String>,
@@ -11,7 +15,7 @@ pub struct Friend {
     pub key_id: String
 }
 
-pub fn create_friend(nickname: Option<String>, public_key: String, key_id: String) -> Result<Friend, String> {
+fn create_friend(nickname: Option<String>, public_key: String, key_id: String) -> Result<Friend, String> {
     match STANDARD.decode(&public_key){
         Ok(bytes) => {
             if public_key.trim().is_empty() {
@@ -38,3 +42,99 @@ pub fn create_friend(nickname: Option<String>, public_key: String, key_id: Strin
     }
 }
 
+pub fn add_friend(
+    nickname: Option<String>, 
+    invite_key: String, 
+    storage_json: String ) -> FunctionResult {
+    // We need our own identity to add/create friends, so a check here,
+    // the implementation might not be good and might be redundant
+    // but will improve later
+    let parsed_storage = storage::parse_storage(storage_json);
+    if !parsed_storage.has_identity{
+        return FunctionResult{
+            success: false,
+            username: None,
+            error: Some("Identity not found!".to_string()),
+            display: "Friends can't be added without having an identity yourself!".to_string(),
+            write: vec![]
+        }
+    }
+        
+    match parser::extract_details_from_invite_key(&invite_key) {
+        Ok(details) => {
+            let public_key = details.public_key;
+            let key_id = details.key_id;
+        
+            // use nickname if given, if not, use the nickname that came from key
+            let nickname = nickname 
+                .filter(|n| !n.trim().is_empty())
+                .or_else(|| {
+                    if details.nickname.as_ref()?.trim().is_empty(){
+                        None
+                    } else {
+                        details.nickname // already Some()
+                    }
+                });
+
+            let current_index = parsed_storage.friend_index;
+                // .friend_index
+                // .unwrap_or_default();
+                                
+            match create_friend(nickname.clone(), public_key, key_id) {
+                Ok(friend) => {
+                    // when there aren't any friends yet
+                    // let index = storage::index_from_json(&current_index).unwrap_or_default(); 
+                    let new_index = storage::add_to_index(&current_index, &friend.public_key);
+                    let display = nickname.unwrap_or_else(|| friend.key_id.to_string());
+                    match new_index {
+                        Ok(n_index) => {
+                            return FunctionResult {
+                                success: true,
+                                username: None,
+                                error: None,
+                                display: format!("Friend {display} has been created!").to_string(),
+                                write: vec![
+                                    StorageWrite { // json with details of one friend
+                                        key: storage::friend_key(&friend.public_key),
+                                        value: storage::friend_to_json(&friend)
+                                    },
+                                    StorageWrite { // json with just the public keys of friends
+                                        key: "friend_index".to_string(),
+                                        value: storage::index_to_json(&n_index)
+                                    },
+                                ]
+                            }
+                        },
+                        Err(e) => {
+                            return FunctionResult {
+                                success: false,
+                                username: None,
+                                error: Some(e),
+                                display: "Couldn't add friend details to storage!".to_string(),
+                                write: vec![]
+                                }
+                        }
+                    }
+                },
+                Err(e) => {
+                    return FunctionResult {
+                        success: false,
+                        username: None,
+                        error: Some(e),
+                        display: "Couldn't create friend!".to_string(),
+                        write: vec![]
+                        }
+                },
+            }
+        },
+        Err(e) => {
+            return FunctionResult {
+                success: false,
+                username: None,
+                error: Some(e),
+                display: "Invalid invite key!".to_string(),
+                write: vec![]
+                }
+        }
+    }
+}
