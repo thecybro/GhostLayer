@@ -17,7 +17,8 @@ chrome.runtime.onMessage.addListener(
     }
 
     if (message.type === "DECRYPT_MESSAGE") {
-      handleDecryptMessage(message, sendResponse);
+      handleDecryptMessage(message.messageKey, sendResponse);
+      return true;
     }
   }
 );
@@ -77,10 +78,11 @@ async function handleEncryptMessage(message, sendResponse) {
 
 async function handleDecryptMessage(message, sendResponse) {
   try {
-    const result = decryptMessage(
-      message.messageKey
-    );
+    const result = await decryptMessage(message);
 
+    // console.log("Message Key", message);
+    // console.log("Result: ", result);
+    
     if (result.success) {
       sendResponse({
         success: true,

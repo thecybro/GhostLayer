@@ -160,11 +160,15 @@ export async function decryptMessage(messageKey) {
   }
   
   const my_private_b64 = identity.private_key;
-
+  
   const result = JSON.parse(
     decrypt(my_private_b64, messageKey)
   );
 
+  // console.log("identity: ", identity);
+  // console.log("My private b64: ", my_private_b64);
+  // console.log("Result: ", result);
+  
   return {
       display: result.display,
       success: result.success,

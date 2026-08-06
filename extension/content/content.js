@@ -1,7 +1,7 @@
 // This file talks to the background worker using:
 // await chrome.runtime.sendMessage({ ... })
 
-const PREFIX = "ghl";
+const PREFIX = "ghl:m"; // :m too cuz the messages start with this
 
 let activeEditor = null;
 
@@ -111,7 +111,8 @@ function addDecryptButton(messageElement, onDecrypt) {
 
     try {
       const success = await onDecrypt();
-
+      // console.log("Decryption success: ", success);
+      
       if (success) {
         button.remove();
       } else {
@@ -119,7 +120,7 @@ function addDecryptButton(messageElement, onDecrypt) {
         button.textContent = "Decrypt";
       }
     } catch (error) {
-      console.error("GhostLayer decryption failed:", error);
+      console.log("GhostLayer decryption failed:", error);
 
       button.disabled = false;
       button.textContent = "Decrypt";
@@ -209,10 +210,10 @@ function processEncryptedTextNode(textNode) {
     return;
   }
 
-  console.log(
-    "Displayed message with GhostLayer prefix found:",
-    text
-  );
+  // console.log(
+    // "Displayed message with GhostLayer prefix found:",
+    // text
+  // );
 
   addDecryptButton(messageElement, async () => {
     const decryptionResult =
@@ -221,6 +222,8 @@ function processEncryptedTextNode(textNode) {
         messageKey: text,
       });
 
+    // console.log("Decrypted Result: ", decryptionResult);
+    
     if (!decryptionResult?.success) {
       console.log(
         `Couldn't decrypt the text: ${text}`
