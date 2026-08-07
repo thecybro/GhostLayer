@@ -62,7 +62,7 @@ pub fn encrypt(
                 success: false,
                 error: Some(e),
                 nonce: None,
-                display: format!("Error: {display}").to_string(),
+                display: format!("Error: {display}"),
                 message_key: None,
             }
         },
@@ -78,7 +78,15 @@ pub fn encrypt(
         &ciphertext_b64
     ) {
         Ok(key) => key,
-        Err(e) => e,
+        Err(e) => {
+            return CryptoFunctionResult{
+                success: false,
+                error: Some(e),
+                nonce: None,
+                display: format!("Couldn't create a message key!"),
+                message_key: None,
+            }
+        },
     };
     
     CryptoFunctionResult {

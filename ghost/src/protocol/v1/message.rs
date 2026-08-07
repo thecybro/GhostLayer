@@ -11,8 +11,6 @@ use crate::protocol::{
 pub fn create(
     input: &CreateMessageInput<'_>
 ) -> Result<String, String> {
-    //validate public key
-    // validate nonce
     validation::public_key(input.sender_public_key)?;
     validation::nonce_b64(input.nonce_b64)?;
     validation::ciphertext_b64(input.ciphertext_b64)?;

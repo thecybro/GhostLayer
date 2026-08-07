@@ -20,14 +20,22 @@ impl Protocol for V1 {
         &self,
         input: &CreateInviteInput<'_>
     ) -> String {
-        invite::create(input).unwrap_or_default()
+        
+        match invite::create(input){
+            Ok(result) => result,
+            Err(_) => "Error while creating invite key!".to_string()
+        }
     }
 
     fn create_message(
         &self,
         input: &CreateMessageInput<'_>
     ) -> String {
-        message::create(input).unwrap_or_default()
+        
+        match message::create(input){
+            Ok(result) => result,
+            Err(_) => "Error while creating message key!".to_string()
+        }
     }
 
     fn parse_invite(
