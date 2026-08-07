@@ -103,5 +103,19 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
             }
         }
     };
-    Ok(serde_json::to_string(&result).unwrap())
+    Ok(
+        match serde_json::to_string(&result){
+            Ok(result) => result,
+            Err(serde_err) => format!(
+                        "{{\
+                            \"success\": false,\
+                            \"username\": null,\
+                            \"error\": \"Serialization failed: {}\",\
+                            \"display\": \"Error occured while copying data to clipboard!\",\
+                            \"write\": []\
+                        }}",
+                        serde_err
+            ),
+        }
+    )
 }

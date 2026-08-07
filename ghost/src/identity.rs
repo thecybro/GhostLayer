@@ -1,7 +1,7 @@
 // This file is responsible for creating:
 // Public and private keys
 // And give the public key as base64
- 
+
 use x25519_dalek::{
     StaticSecret,
     PublicKey,
