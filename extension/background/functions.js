@@ -114,7 +114,7 @@ async function getIdentity() {
    }
 }
 
-export async function encryptMessage(their_public_b64, message) {
+export async function encryptMessage(their_public_b64, plainText) {
   const identity = await getIdentity();
 
   if (!identity) {
@@ -130,7 +130,7 @@ export async function encryptMessage(their_public_b64, message) {
   const my_public_b64 = identity.public_key;
   
   const result = JSON.parse(
-    encrypt(my_public_b64, my_private_b64, their_public_b64, message)
+    encrypt(my_public_b64, my_private_b64, their_public_b64, plainText)
   );
 
   return {
@@ -147,9 +147,10 @@ export async function encryptMessage(their_public_b64, message) {
     };
 }
 
-// Lmao I had really forgotten to use the messageKey in the decryption part
 export async function decryptMessage(messageKey) {
   const identity = await getIdentity();
+  const storedFriendIndexJson = await loadFromStorage("friend_index");
+  const friendIndexJson = storedFriendIndexJson.friend_index ?? "[]";
 
   if (!identity) {
     return {
@@ -159,10 +160,14 @@ export async function decryptMessage(messageKey) {
     };
   }
   
+  console.log("Identity: ", identity);
+  console.log("Friend index json: ", friendIndexJson);
+
+  const my_public_b64 = identity.public_key;
   const my_private_b64 = identity.private_key;
-  
+
   const result = JSON.parse(
-    decrypt(my_private_b64, messageKey)
+    decrypt(my_public_b64, my_private_b64, friendIndexJson, messageKey)
   );
 
   // console.log("identity: ", identity);

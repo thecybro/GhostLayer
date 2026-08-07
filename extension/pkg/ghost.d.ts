@@ -7,7 +7,7 @@ export function copy_to_clipboard(storage_json: string, item: string): Promise<s
 
 export function create_identity(username?: string | null): string;
 
-export function decrypt(my_private_b64: string, message_key: string): string;
+export function decrypt(my_public_b64: string, my_private_b64: string, friend_index_json: string, message_key: string): string;
 
 export function encrypt(my_public_b64: string, my_private_b64: string, their_public_b64: string, message: string): string;
 
@@ -20,7 +20,7 @@ export interface InitOutput {
     readonly add_friend: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly copy_to_clipboard: (a: number, b: number, c: number, d: number) => any;
     readonly create_identity: (a: number, b: number) => [number, number];
-    readonly decrypt: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly decrypt: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
     readonly encrypt: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
     readonly load_display_data: (a: number, b: number) => [number, number];
     readonly wasm_bindgen_7815ba1f1746f71b___convert__closures_____invoke___wasm_bindgen_7815ba1f1746f71b___JsValue__core_9b3796e30d99ddb7___result__Result_____wasm_bindgen_7815ba1f1746f71b___JsError___true_: (a: number, b: number, c: any) => [number, number];

@@ -121,12 +121,16 @@ pub fn encrypt(
 
 #[wasm_bindgen]
 pub fn decrypt(
+    my_public_b64: String,
     my_private_b64: String,
-    message_key: String ) -> String {
+    friend_index_json: String, 
+    message_key: String, ) -> String {
         
     match serde_json::to_string(
         &crypto::decrypt(
+            my_public_b64,
             my_private_b64,
+            friend_index_json, 
             message_key,
         )
     ){

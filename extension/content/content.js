@@ -1,6 +1,6 @@
 // This file talks to the background worker using:
 // await chrome.runtime.sendMessage({ ... })
-
+// Decryption failed
 const PREFIX = "ghl:m"; // :m too cuz the messages start with this
 
 let activeEditor = null;

@@ -1,7 +1,10 @@
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce, aead::{Aead, KeyInit}};
 use rand_core::{OsRng, TryRngCore};
 
+use x25519_dalek::{StaticSecret, PublicKey};
+// Decryption failed
 use crate::parser;
+use crate::storage;
 use crate::types::CryptoFunctionResult;
 
 fn encrypt_message(key_bytes: &[u8; 32], plaintext: &str) -> (Vec<u8>, Vec<u8>) {
@@ -16,7 +19,7 @@ fn encrypt_message(key_bytes: &[u8; 32], plaintext: &str) -> (Vec<u8>, Vec<u8>) 
     (nonce.to_vec(), ciphertext)
 }
 
-fn decrypt_text(key_bytes: &[u8; 32], nonce: Vec<u8>, ciphertext: Vec<u8>) -> Result<String, String> {
+fn decrypt_text(key_bytes: &[u8; 32], nonce: &Vec<u8>, ciphertext: &Vec<u8>) -> Result<String, String> {
     let key = Key::try_from(key_bytes.as_slice()).map_err(|_| "Invalid key".to_string())?;
     let cipher = ChaCha20Poly1305::new(&key);
 
@@ -28,13 +31,12 @@ fn decrypt_text(key_bytes: &[u8; 32], nonce: Vec<u8>, ciphertext: Vec<u8>) -> Re
     }
 }
 
-// Computes the shared secret both sides will independently arrive at.
-fn compute_shared_secret(my_private_b64: &str, their_public_b64: &str) -> Result<[u8; 32], String> {
+/// Computes the shared secret both sides will independently arrive at.
+fn compute_shared_secret(my_private_b64: &str, sender_public_b64: &str) -> Result<[u8; 32], String> {
     use base64::{engine::general_purpose, Engine };
-    use x25519_dalek::{StaticSecret, PublicKey};
 
     let priv_bytes = general_purpose::STANDARD.decode(my_private_b64).map_err(|_| "Bad private key".to_string())?;
-    let pub_bytes = general_purpose::STANDARD.decode(their_public_b64).map_err(|_| "Bad public key".to_string())?;
+    let pub_bytes = general_purpose::STANDARD.decode(sender_public_b64).map_err(|_| "Bad public key".to_string())?;
 
     let priv_arr: [u8; 32] = priv_bytes.try_into().map_err(|_| "Private key wrong length".to_string())?;
     let pub_arr: [u8; 32] = pub_bytes.try_into().map_err(|_| "Public key wrong length".to_string())?;
@@ -49,12 +51,12 @@ fn compute_shared_secret(my_private_b64: &str, their_public_b64: &str) -> Result
 pub fn encrypt(
     my_public_b64: String,
     my_private_b64: String,
-    their_public_b64: String,
+    sender_public_b64: String,
     message: String ) -> CryptoFunctionResult {
         
     use base64::{engine::general_purpose::STANDARD, Engine};
 
-    let key_bytes = match compute_shared_secret(&my_private_b64, &their_public_b64) {
+    let key_bytes = match compute_shared_secret(&my_private_b64, &sender_public_b64) {
         Ok(k) => k,
         Err(e) => {
             let display = &e.clone();
@@ -100,11 +102,14 @@ pub fn encrypt(
 }
 
 pub fn decrypt(
+    my_public_b64: String,
     my_private_b64: String,
-    message_key: String ) -> CryptoFunctionResult {
+    friend_index_json: String, 
+    message_key: String,
+) -> CryptoFunctionResult {
         
     use base64::{engine::general_purpose::STANDARD, Engine};
-        
+
     let details = match parser::extract_details_from_message_key(&message_key) {
         Ok(detail) => detail,
         Err(e) => {
@@ -118,22 +123,14 @@ pub fn decrypt(
         },
     };
 
-    let their_public_b64 = details.sender_public_key;
+    // the persons' public key who had created the message key
+    // myself if i am trying to decrypt my own message,
+    // my friend if he is trying to decrypt my message
+    
+    let sender_public_b64 = details.sender_public_key; 
+    
     let nonce_b64 = details.nonce_b64;
     let ciphertext_b64 = details.ciphertext_b64;
-    
-    let key_bytes = match compute_shared_secret(&my_private_b64, &their_public_b64) {
-        Ok(k) => k,
-        Err(e) => {
-            return CryptoFunctionResult {
-                success: false,
-                error: Some(e),
-                nonce: None,
-                display: "Error occured while decrypting!".to_string(),
-                message_key: None,
-            }
-        }
-    };
 
     let nonce = match STANDARD.decode(&nonce_b64) {
         Ok(n) => n,
@@ -160,8 +157,131 @@ pub fn decrypt(
             }
         }
     };
+    
+    if my_public_b64 == sender_public_b64 {
+        // get the index/Vec so we can loop over it
+        match storage::index_from_json(&friend_index_json){
+            Ok(friend_index) => {
+                // Got the Vec!!
+                // 
+                // Now we are looping over the friend index to get
+                // the friend for whom we had encrypted the text,
+                // so we can use his public key and my private key
+                // to decrypt the message
+                for friend_public_b64 in friend_index.iter(){
+                    // we compute the secret key/key byte so we can 
+                    // decrypt it later to see if it's successfull
+                    match compute_shared_secret(&my_private_b64, &friend_public_b64){
+                        // friend_public_b64: the friends' public key we had in our storage
+                        Ok(key_byte) => {
+                            // we decrypt the text now and it's successfull
+                            // only when the shared_secret we generated is the
+                            // same which was used to generate the ciphertext
+                            // shared secrets are same when we use:
+                            // 1. My private and friends' public key
+                            // 2. Friends private and my public key
+                            match decrypt_text(&key_byte, &nonce, &ciphertext){
+                                Ok(plaintext) => {
+                                    return CryptoFunctionResult {
+                                        success: true,
+                                        nonce: None,
+                                        error: None,
+                                        display: plaintext,
+                                        message_key: None,
+                                    }
+                                }
+                                Err(_) => continue,
+                            }
+                        },
+                        Err(e) => {
+                            return CryptoFunctionResult {
+                                success: false,
+                                nonce: None,
+                                error: Some(e),
+                                display: "Some error occured while creating a shared key!".to_string(),
+                                message_key: None
+                            }
+                        },
+                    }
+                }
+            }
+            Err(e) => {
+                return CryptoFunctionResult {
+                    success: false,
+                    error: Some(e),
+                    nonce: None,
+                    display: "Couldn't parsing friend index!".to_string(),
+                    message_key: None,
+                }
+            }
+        }
+    }
 
-    let plaintext = match decrypt_text(&key_bytes, nonce, ciphertext) {
+    
+    let key_bytes = match compute_shared_secret(&my_private_b64, &sender_public_b64){ 
+        // sender_public_b64: the public key we got from the message friend had created
+        Ok(k) => k,
+        Err(e) => {
+            return CryptoFunctionResult {
+                success: false,
+                error: Some(e),
+                nonce: None,
+                display: "Error occured while creating a shared secret key for you!".to_string(),
+                message_key: None,
+            }
+        }
+    };
+    
+    // This means I am trying to decrypt the message
+    // I encrypted myself
+    /* if my_public_b64 == sender_public_b64 {
+    //     let friend_index = storage::index_from_json(&friend_index_json).unwrap();
+
+    //     for friend in friend_index.iter(){
+    //         let key_bytes = match compute_shared_secret(&my_private_b64, &friend) {
+    //             Ok(k) => k,
+    //             Err(e) => {
+    //                 return CryptoFunctionResult {
+    //                     success: false,
+    //                     error: Some(e),
+    //                     nonce: None,
+    //                     display: "Error occured while creating a shared secret for friend!!".to_string(),
+    //                     message_key: None,
+    //                 }
+    //             }
+    //         };
+
+    //     }
+    // }
+    
+        let nonce = match STANDARD.decode(&nonce_b64) {
+        //     Ok(n) => n,
+        //     Err(_) => {
+        //         return CryptoFunctionResult {
+        //             success: false,
+        //             error: Some("Invalid nonce".to_string()),
+        //             nonce: None,
+        //             display: "Error occured while decrypting!".to_string(),
+        //             message_key: None,
+        //         }
+        //     }
+        // };
+    
+        let ciphertext = match STANDARD.decode(&ciphertext_b64) {
+            Ok(c) => c,
+            Err(_) => {
+        //         return CryptoFunctionResult {
+        //             success: false,
+        //             error: Some("Invalid ciphertext".to_string()),
+        //             nonce: None,
+        //             display: "Error occured while decrypting!".to_string(),
+        //             message_key: None,
+        //         }
+        //     }
+        };
+     */
+
+    let plaintext = match decrypt_text(&key_bytes, &nonce, &ciphertext) {
         Ok(text) => text,
         Err(e) => {
             return CryptoFunctionResult {

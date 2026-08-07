@@ -4,7 +4,7 @@ export const memory: WebAssembly.Memory;
 export const add_friend: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
 export const copy_to_clipboard: (a: number, b: number, c: number, d: number) => any;
 export const create_identity: (a: number, b: number) => [number, number];
-export const decrypt: (a: number, b: number, c: number, d: number) => [number, number];
+export const decrypt: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
 export const encrypt: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
 export const load_display_data: (a: number, b: number) => [number, number];
 export const wasm_bindgen_7815ba1f1746f71b___convert__closures_____invoke___wasm_bindgen_7815ba1f1746f71b___JsValue__core_9b3796e30d99ddb7___result__Result_____wasm_bindgen_7815ba1f1746f71b___JsError___true_: (a: number, b: number, c: any) => [number, number];
