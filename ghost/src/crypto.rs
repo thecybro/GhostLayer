@@ -2,7 +2,7 @@ use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce, aead::{Aead, KeyInit}};
 use rand_core::{OsRng, TryRngCore};
 
 use x25519_dalek::{StaticSecret, PublicKey};
-// Decryption failed
+
 use crate::parser;
 use crate::storage;
 use crate::types::CryptoFunctionResult;
@@ -51,12 +51,12 @@ fn compute_shared_secret(my_private_b64: &str, sender_public_b64: &str) -> Resul
 pub fn encrypt(
     my_public_b64: String,
     my_private_b64: String,
-    sender_public_b64: String,
+    recipient_public_b64: String,
     message: String ) -> CryptoFunctionResult {
         
     use base64::{engine::general_purpose::STANDARD, Engine};
 
-    let key_bytes = match compute_shared_secret(&my_private_b64, &sender_public_b64) {
+    let key_bytes = match compute_shared_secret(&my_private_b64, &recipient_public_b64) {
         Ok(k) => k,
         Err(e) => {
             let display = &e.clone();
@@ -193,15 +193,7 @@ pub fn decrypt(
                                 Err(_) => continue,
                             }
                         },
-                        Err(e) => {
-                            return CryptoFunctionResult {
-                                success: false,
-                                nonce: None,
-                                error: Some(e),
-                                display: "Some error occured while creating a shared key!".to_string(),
-                                message_key: None
-                            }
-                        },
+                        Err(_) => continue,
                     }
                 }
             }
@@ -231,55 +223,6 @@ pub fn decrypt(
             }
         }
     };
-    
-    // This means I am trying to decrypt the message
-    // I encrypted myself
-    /* if my_public_b64 == sender_public_b64 {
-    //     let friend_index = storage::index_from_json(&friend_index_json).unwrap();
-
-    //     for friend in friend_index.iter(){
-    //         let key_bytes = match compute_shared_secret(&my_private_b64, &friend) {
-    //             Ok(k) => k,
-    //             Err(e) => {
-    //                 return CryptoFunctionResult {
-    //                     success: false,
-    //                     error: Some(e),
-    //                     nonce: None,
-    //                     display: "Error occured while creating a shared secret for friend!!".to_string(),
-    //                     message_key: None,
-    //                 }
-    //             }
-    //         };
-
-    //     }
-    // }
-    
-        let nonce = match STANDARD.decode(&nonce_b64) {
-        //     Ok(n) => n,
-        //     Err(_) => {
-        //         return CryptoFunctionResult {
-        //             success: false,
-        //             error: Some("Invalid nonce".to_string()),
-        //             nonce: None,
-        //             display: "Error occured while decrypting!".to_string(),
-        //             message_key: None,
-        //         }
-        //     }
-        // };
-    
-        let ciphertext = match STANDARD.decode(&ciphertext_b64) {
-            Ok(c) => c,
-            Err(_) => {
-        //         return CryptoFunctionResult {
-        //             success: false,
-        //             error: Some("Invalid ciphertext".to_string()),
-        //             nonce: None,
-        //             display: "Error occured while decrypting!".to_string(),
-        //             message_key: None,
-        //         }
-        //     }
-        };
-     */
 
     let plaintext = match decrypt_text(&key_bytes, &nonce, &ciphertext) {
         Ok(text) => text,
