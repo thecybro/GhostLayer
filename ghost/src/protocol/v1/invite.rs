@@ -2,6 +2,8 @@ use crate::protocol::{
     types::{
         CreateInviteInput,
         InviteDetails,
+    },
+    framing::{
         PUBLIC_KEY_B64_LENGTH,
     },
     v1::validation,

@@ -32,11 +32,3 @@ pub struct MessageDetails {
     pub nonce_b64: String,
     pub ciphertext_b64: String,
 }
-
-// X25519 public keys are 32 bytes.
-// Standard Base64 represents 32 bytes using 44 characters.
-pub const PUBLIC_KEY_B64_LENGTH: usize = 44;
-
-// ChaCha20Poly1305 uses a 12-byte nonce.
-// Standard Base64 represents 12 bytes using 16 characters.
-pub const NONCE_B64_LENGTH: usize = 16;

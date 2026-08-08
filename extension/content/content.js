@@ -1,12 +1,26 @@
 // This file talks to the background worker using:
 // await chrome.runtime.sendMessage({ ... })
 
-const PREFIX = "ghl:m"; // :m too cuz the messages start with this
+const PREFIX = "ghl:msg"; // what a message key starts with once the code markers `` are stripped
 
 let activeEditor = null;
 
 // Prevent adding multiple Decrypt buttons to the same displayed message.
 const seenMessages = new WeakSet();
+
+function formatMessageKey(messageKey) {
+  return `\`${messageKey}\``;
+}
+
+// Platforms that render code spans `` eat the backstricks, and the ones
+// that don't leave in the text, so both shapes have to be accepted
+function stripCodeMarkers(text) {
+  return (text ?? "").trim().replace(/^`+/, "").replace(/`+$/, "").trim();
+}
+
+function isMessageKey(text) {
+  return stripCodeMarkers(text).startsWith(PREFIX);
+}
 
 /*
  * Return the real editor associated with an element.
@@ -200,9 +214,11 @@ function processEncryptedTextNode(textNode) {
 
   const text = textNode.nodeValue?.trim();
 
-  if (!text?.includes(PREFIX)) {
+  if (!isMessageKey(text)) {
     return;
   }
+
+  const messageKey = stripCodeMarkers(text);
 
   const messageElement = textNode.parentElement;
 
@@ -219,14 +235,14 @@ function processEncryptedTextNode(textNode) {
     const decryptionResult =
       await chrome.runtime.sendMessage({
         type: "DECRYPT_MESSAGE",
-        messageKey: text,
+        messageKey: messageKey,
       });
 
     // console.log("Decrypted Result: ", decryptionResult);
     
     if (!decryptionResult?.success) {
       console.log(
-        `Couldn't decrypt the text: ${text}`
+        `Couldn't decrypt the text: ${messageKey}`
       );
 
       console.error(
@@ -368,12 +384,58 @@ function getTextFromEditor(editor) {
   return "";
 }
 
+function pasteIntoEditor(editor, newText) {
+  const data = new DataTransfer();
+  data.setData("text/plain", newText);
+
+  return editor.dispatchEvent(
+    new ClipboardEvent("paste", {
+      bubbles: true,
+      cancelable: true,
+      clipboardData: data,
+    })
+  );
+}
+
+// Some editors ignore a synthetic paste but still read beforeinput and
+// update their own model from it. This is the modern editing event, so it
+// is worth one attempt before giving up.
+function beforeInputIntoEditor(editor, newText) {
+  const data = new DataTransfer();
+  data.setData("text/plain", newText);
+
+  return editor.dispatchEvent(
+    new InputEvent("beforeinput", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      inputType: "insertFromPaste",
+      dataTransfer: data,
+    })
+  );
+}
+
 // Replace editor text and notify the website that input occurred.
 async function replaceContentOfEditor(editor, newText) {
+
+  console.log("GhostLayer editor:", editor);
+  console.log("  tag/role/ce:", editor.tagName,
+  editor.getAttribute("role"), editor.getAttribute("contenteditable"));
+  console.log("  is the editable itself:",
+  editor.closest('[contenteditable="true"]') === editor);
+  console.log("  nested editable:",
+  editor.querySelector('[contenteditable="true"]'));
+  console.log("  activeElement before focus:", document.activeElement);
+  
   editor.focus();
 
-  function nextTick() {
-    return new Promise((resolve) => setTimeout(resolve, 0));
+  console.log("  activeElement after focus:", document.activeElement);
+  
+  // Slate throttles its selection sync at about 100ms, so a zero delay is not
+  // enough for it to notice the selection we set. It reads edits off its own
+  // model selection, and a stale one makes it ignore the edit entirely.
+  function nextTick(delay = 150) {
+    return new Promise((resolve) => setTimeout(resolve, delay));
   }
   
   if (editor instanceof HTMLTextAreaElement) {
@@ -430,50 +492,89 @@ async function replaceContentOfEditor(editor, newText) {
       return false;
     }
 
-    const range = document.createRange();
+    // Each attempt below consumes the selection, so it has to be put back
+    // before the next one runs.
+    async function selectEverything() {
+      const range = document.createRange();
 
-    range.selectNodeContents(editor);
+      range.selectNodeContents(editor);
 
-    selection.removeAllRanges();
-    selection.addRange(range);
+      selection.removeAllRanges();
+      selection.addRange(range);
 
-    // So we can let selectiochange reach the editor's own state before commanding it
+      // So we can let selectionchange reach the editor's own state before
+      // commanding it
+      await nextTick();
+    }
+
+    // Slate reports success from execCommand while quietly ignoring the edit
+    // in its own model. That leaves the encrypted text on screen and the
+    // original one in the message the site actually sends, so execCommand is
+    // useless here no matter what it returns. Its paste handler does reach the
+    // model, so Slate skips ahead to that.
+    const isSlate = editor.hasAttribute("data-slate-editor");
+
+    console.log("GhostLayer editor is slate: ", isSlate);
+
+    await selectEverything();
+
+    if (!isSlate) {
+      const inserted = document.execCommand( // deprecated so have to replace it soon, but it works for nwo
+        "insertText",
+        false,
+        newText
+      );
+
+      console.log("GhostLayer execCommand insertText: ", inserted);
+
+      // Firing has already happened above in the respective
+      // event handlers, so we dont have to do it again
+      if (inserted) {
+        return true;
+      }
+
+      // execCommand was refused, so the selection it consumed has to go back
+      // before the next attempt.
+      await selectEverything();
+    }
+
+    // The paste path makes the editor think the user pasted something, which
+    // runs the text through the editor's own handler instead of past it.
+    pasteIntoEditor(editor, newText);
     await nextTick();
-    
-    const inserted = document.execCommand( // deprecated so have to replace it soon, but it works for nwo
-      "insertText",
-      false,
-      newText
-    );
 
-    console.log("GhostLayer execCommand inserText: ", inserted);
+    console.log("GhostLayer paste worked: ", getTextFromEditor(editor).includes(newText));
 
-    // Firing has already happened above in the respective
-    // event handlers, so we dont have to do it again
-    if (inserted) {
-      // editor.textContent = newText;
+    if (getTextFromEditor(editor).includes(newText)) {
       return true;
     }
 
-    // Only reached when execCommand was refused.
-    // Cuz on the slate/lexical (discord/messenger), this
-    // updates the view but not the model, so it must not
-    // report success className
-    editor.textContent = newText;
-  
-    editor.dispatchEvent(
-      new InputEvent("input", {
-        bubbles: true,
-        composed: true,
-        inputType: "insertText",
-        data: newText,
-      })
-    );
+    // Last attempt, the editing event the paste path is built on top of.
+    await selectEverything();
+    beforeInputIntoEditor(editor, newText);
+    await nextTick();
+
+    console.log("GhostLayer beforeinput worked: ", getTextFromEditor(editor).includes(newText));
+
+    if (getTextFromEditor(editor).includes(newText)) {
+      return true;
+    }
+
+    // A failed paste can still eat the selection without inserting anything,
+    // which would leave the box empty and lose what the user typed.
+    console.log("GhostLayer editor text after all attempts: ", getTextFromEditor(editor));
+
+    // Nothing reached the editor's own model. Writing the DOM directly here
+    // would show the encrypted text while the site keeps sending the original
+    // one, so the editor is left untouched and the caller is told it failed.
     return false;
   }
   return false;
 }
 
+encryptButton.addEventListener("mousedown", (event) => {
+  event.preventDefault();
+});
 // Main encryption flow.
 encryptButton.addEventListener("click", async () => {
   if (!activeEditor) {
@@ -535,14 +636,39 @@ encryptButton.addEventListener("click", async () => {
 
   const replaced = await replaceContentOfEditor(
     activeEditor,
-    encryptionResult.messageKey
+    formatMessageKey(encryptionResult.messageKey)
   );
+  // to get something like `message_key_here`
 
   if (!replaced) {
     console.error(
       "GhostLayer: could not insert the encrypted text safely. " +
       "Do NOT press send as this site may still send your original message."
     );
+
+    // A real Ctrl+V is a trusted paste, so every editor accepts it even when
+    // none of the scripted attempts above got through. Putting the key on the
+    // clipboard leaves the user a way to finish by hand.
+    try {
+      const formatedMessageKey = formatMessageKey(encryptionResult.messageKey);
+      await navigator.clipboard.writeText(
+        formatedMessageKey
+      );
+
+      console.error(
+        "GhostLayer: copy this by hand:" +
+        formatedMessageKey
+      );
+    } catch (error) {
+      // The clipboard needs a recent user gesture and the friend selector can
+      // outlast it, so the key is printed here rather than lost.
+      console.error(
+        "GhostLayer: could not reach the clipboard either.",
+        error
+      );
+      console.error("GhostLayer: copy this by hand:", encryptionResult.messageKey);
+      console.error("GhostLayer: your original text was:", plaintext);
+    }
   }
 });
 
@@ -552,6 +678,13 @@ function showFriendsSelector(friends) {
     const overlay = document.createElement("div");
 
     overlay.className = "ghostlayer-friend-selector";
+
+    // mousedown is what moves focus, and preventDefault on it here covers
+    // every child too, so the composer never loses its caret while the user
+    // picks a friend.
+    overlay.addEventListener("mousedown", (event) => {
+      event.preventDefault();
+    });
 
     Object.assign(overlay.style, {
       position: "fixed",
@@ -609,6 +742,10 @@ function showFriendsSelector(friends) {
         cursor: "pointer",
       });
 
+      friendButton.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+      });
+      
       friendButton.addEventListener(
         "click",
         (event) => {
@@ -639,6 +776,10 @@ function showFriendsSelector(friends) {
       cursor: "pointer",
     });
 
+    cancelButton.addEventListener("mousedown", (event) => {
+      event.preventDefault();
+    });
+    
     cancelButton.addEventListener(
       "click",
       (event) => {

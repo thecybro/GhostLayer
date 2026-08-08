@@ -1,16 +1,26 @@
-/// The format we are aiming for later (see formats below), but initially, we might go with just ghl, and ghl_message
-/// to validate it works
+/// The format we are aiming for:
 /// 
-/// ghl:i:1:<invite-payload>
-/// ghl:m:1:<message-payload>
+/// ghl:inv:1:<invite-payload>
+/// ghl:msg:1:<message-payload>
 ///
 /// Where:
 /// - ghl = GhostLayer marker
-/// - i or m = invite/message kind
+/// - inv or msg = invite/message kind
 /// - 1 = protocol version
 /// - remainder = version-specific payload
 
 pub const ROOT_PREFIX: &str = "ghl";
+
+// X25519 public keys are 32 bytes.
+// Standard Base64 represents 32 bytes using 44 characters.
+pub const PUBLIC_KEY_B64_LENGTH: usize = 44;
+
+// ChaCha20Poly1305 uses a 12-byte nonce.
+// Standard Base64 represents 12 bytes using 16 characters.
+pub const NONCE_B64_LENGTH: usize = 16;
+
+pub const MESSAGE_FRAME_KIND: &str = "msg";
+pub const INVITE_FRAME_KIND: &str = "inv";
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum FrameKind{
@@ -32,11 +42,11 @@ pub fn create_frame(
 ) -> String { 
     
     let kind = match kind {
-        FrameKind::Invite => "i",
-        FrameKind::Message => "m",
+        FrameKind::Invite => INVITE_FRAME_KIND,
+        FrameKind::Message => MESSAGE_FRAME_KIND,
     };
 
-    // looks like ghl:m:1:<message-payload>
+    // looks like ghl:msg:1:<message-payload>
     format!("{ROOT_PREFIX}:{kind}:{version}:{payload}") 
 }
 
@@ -45,7 +55,7 @@ pub fn create_frame(
 pub fn parse_frame(
     frame: &str
 ) -> Result<Frame<'_>, String> { // later, we gotta replace Err(String) with a custom GhostLayerError
-    // the format would be like ghl:i:1:<invite-payload>, where delimiter is : so we split by it
+    // the format would be like ghl:inv:1:<invite-payload>, where delimiter is : so we split by it
     // we dont have to care about the format of payload (which might contain : in itself) because
     // we split only upto the version, and keep the rest as is
     let mut parts = frame.splitn(4, ":"); // returns Option<>
@@ -60,8 +70,8 @@ pub fn parse_frame(
     };
 
     let kind = match kind {
-        Some("i") => FrameKind::Invite,
-        Some("m") => FrameKind::Message,
+        Some(INVITE_FRAME_KIND) => FrameKind::Invite,
+        Some(MESSAGE_FRAME_KIND) => FrameKind::Message,
         _ => {
             return Err("Invalid ghostlayer kind!".into())
         }

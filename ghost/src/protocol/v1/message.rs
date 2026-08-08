@@ -2,6 +2,8 @@ use crate::protocol::{
     types::{
         CreateMessageInput, 
         MessageDetails,
+    },
+    framing::{
         PUBLIC_KEY_B64_LENGTH,
         NONCE_B64_LENGTH,
     },
