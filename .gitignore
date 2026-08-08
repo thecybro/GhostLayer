@@ -1,3 +1,7 @@
+*.pem
+secret/
+secrets/
+
 target/
 drafts/
 # previews/
