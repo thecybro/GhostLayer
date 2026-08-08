@@ -9,6 +9,11 @@ drafts/
 # Root level Rust scratch crate, not part of the extension
 /tests/
 
+# Raw full screen captures. These still show the browser tab titles, the URL
+# bar, the Discord contact list and the channel id. Only the redacted versions
+# in store-assets/screenshots/ are safe to publish.
+previews/final_shots/
+
 # Local test identities and captured console logs. These contain real private
 # keys for throwaway identities and must never be committed.
 extension/tests/*_values.md
