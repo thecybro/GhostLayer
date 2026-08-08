@@ -20,3 +20,6 @@ extension/tests/*_values.md
 extension/tests/*.log
 extension/settings/
 dist/
+
+# Scratch text for the Chrome Web Store submission form. Delete after submitting.
+submission-notes/

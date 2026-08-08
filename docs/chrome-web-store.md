@@ -19,7 +19,19 @@ step or the listing quietly drifts from the installed extension.
 End to end encrypt messages in any web chat. Your keys never leave your device. No accounts, no servers.
 ```
 
-**Category**: Communication
+**Category**: Privacy & Security
+
+Communication is the obvious pick and is defensible, but Privacy & Security is
+a smaller, better matched pool. The extension is not a chat client; it is a
+thing you put on top of one. If a second category is offered, use Communication
+there.
+
+**Language**: English
+
+**Mature content**: No
+
+**Google Analytics ID**: leave blank. The extension makes no network requests
+and the privacy policy says so, so adding analytics here would contradict it.
 
 **Detailed description**
 
@@ -81,7 +93,24 @@ GhostLayer lets a user encrypt a message before sending it through a web chat
 platform, and decrypt messages sent to them by their contacts.
 ```
 
+**Are you using remote code?**
+
+```
+No, I am not using remote code
+```
+
+Everything executes from inside the package. The WebAssembly module is bundled
+at `pkg/ghost_bg.wasm`, not fetched. If a reviewer asks about
+`wasm-unsafe-eval` in the manifest CSP, that flag only permits instantiating
+the WASM that already ships in the package; it does not load anything remote.
+
 **Data usage**: tick nothing. GhostLayer collects and transmits no user data.
+
+Every checkbox on that list stays empty. Not personally identifiable
+information, not health, not financial, not authentication, not personal
+communications, not location, not web history, not user activity. The extension
+reads page text in the browser to find message keys and discards it, which is
+processing, not collection, and nothing leaves the machine.
 
 **Privacy policy URL**
 
@@ -131,6 +160,32 @@ If the submission is rejected on this permission anyway, the fix is to move
 first use. That is a functional change (the content script would no longer
 auto-inject) and should be a deliberate decision, not a panic edit during
 review.
+
+## Distribution tab
+
+**Visibility**: Public
+
+Unlisted is worth considering for a first submission, since the item still goes
+through the same review but is only reachable by direct link. If you want to
+hand the link to a few people and watch for problems before it is searchable,
+start Unlisted and switch to Public later. Switching does not need a new review.
+
+**Distribution regions**: all regions.
+
+**Pricing**: Free.
+
+## Account level
+
+Set once, applies to every item you publish.
+
+**Publisher name**: shown on every listing. Whatever you set here is what users
+see under the extension name, so it should match how the repo is signed.
+
+**Publisher email**: must be verified before you can publish.
+
+**Trader status**: non-trader. GhostLayer is free, has no in-app purchases, and
+no contract is formed with anyone on the marketplace. Change this to trader
+before shipping anything paid under this account, not after.
 
 <!--## Before uploading
 
