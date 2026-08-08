@@ -28,7 +28,7 @@ pub fn parse(
     // validate public key here
     // 
     if invite.len() < PUBLIC_KEY_B64_LENGTH {
-        return Err("Invite key is too short.".to_string());
+        return Err("That invite key is too short to be valid. Ask your friend to copy their invite again.".to_string());
     };
     // First 44 characters are always the Base64 public key.
     // Anything afterward is the optional nickname.

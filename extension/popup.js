@@ -91,9 +91,9 @@ async function main() {
       notify(result.display, result.status);
     });
 
-  document.getElementById("settings-link").addEventListener("click", () => {
-      window.location.href = "tests/test.html";
-    });
+  // document.getElementById("settings-link").addEventListener("click", () => {
+      // window.location.href = "settings/settings.html";
+    // });
 }
 
 main().catch(console.error);

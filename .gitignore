@@ -1,4 +1,13 @@
-drafts/
 target/
+drafts/
 # previews/
-tests/
+
+# Root level Rust scratch crate, not part of the extension
+/tests/
+
+# Local test identities and captured console logs. These contain real private
+# keys for throwaway identities and must never be committed.
+extension/tests/*_values.md
+extension/tests/*.log
+extension/settings/
+dist/

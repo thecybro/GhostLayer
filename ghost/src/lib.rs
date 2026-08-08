@@ -22,8 +22,8 @@ pub fn create_identity(username: Option<String>) -> String {
                     "{{\
                         \"success\": false,\
                         \"username\": null,\
-                        \"error\": \"Serialization failed: {}\",\
-                        \"display\": \"Error occured while creating identity!\",\
+                        \"error\": \"serde_json to_string failed: {}\",\
+                        \"display\": \"GhostLayer could not package its own result. This is a bug in GhostLayer, please report it.\",\
                         \"write\": []\
                     }}",
                     serde_err
@@ -49,8 +49,8 @@ pub fn add_friend(
                    "{{\
                        \"success\": false,\
                        \"username\": null,\
-                       \"error\": \"Serialization failed: {}\",\
-                       \"display\": \"Error occured while adding friend\",\
+                       \"error\": \"serde_json to_string failed: {}\",\
+                       \"display\": \"GhostLayer could not package its own result. This is a bug in GhostLayer, please report it.\",\
                        \"write\": []\
                    }}",
                    serde_err
@@ -69,8 +69,8 @@ pub fn load_display_data(storage_json: String) -> String {
                     "{{\
                         \"success\": false,\
                         \"username\": null,\
-                        \"error\": \"Serialization failed: {}\",\
-                        \"display\": \"Error occured while loading display data!\",\
+                        \"error\": \"serde_json to_string failed: {}\",\
+                        \"display\": \"GhostLayer could not package its own result. This is a bug in GhostLayer, please report it.\",\
                         \"write\": []\
                     }}",
                     serde_err
@@ -110,8 +110,8 @@ pub fn encrypt(
                     "{{\
                         \"success\": false,\
                         \"username\": null,\
-                        \"error\": \"Serialization failed: {}\",\
-                        \"display\": \"Error occured while returning encrypted data!\",\
+                        \"error\": \"serde_json to_string failed: {}\",\
+                        \"display\": \"GhostLayer could not package its own result. This is a bug in GhostLayer, please report it.\",\
                         \"write\": []\
                     }}",
                     serde_err
@@ -139,8 +139,8 @@ pub fn decrypt(
                     "{{\
                         \"success\": false,\
                         \"username\": null,\
-                        \"error\": \"Serialization failed: {}\",\
-                        \"display\": \"Error occured while returning encrypted data!\",\
+                        \"error\": \"serde_json to_string failed: {}\",\
+                        \"display\": \"GhostLayer could not package its own result. This is a bug in GhostLayer, please report it.\",\
                         \"write\": []\
                     }}",
                     serde_err

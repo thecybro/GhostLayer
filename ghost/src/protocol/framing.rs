@@ -66,22 +66,22 @@ pub fn parse_frame(
     let payload = parts.next();
 
     if prefix != Some(ROOT_PREFIX) {
-        return Err("Invalid ghostlayer prefix!".into())
+        return Err("That is not a GhostLayer message. GhostLayer text always starts with \"ghl:\".".into())
     };
 
     let kind = match kind {
         Some(INVITE_FRAME_KIND) => FrameKind::Invite,
         Some(MESSAGE_FRAME_KIND) => FrameKind::Message,
         _ => {
-            return Err("Invalid ghostlayer kind!".into())
+            return Err("That GhostLayer text is neither an invite key nor a message, so it is damaged.".into())
         }
     };
 
     let version = version
-        .ok_or_else(|| "Invalid version number!")?; // ok_or_else() to convert Option<T> into a Result<T, E>
+        .ok_or_else(|| "That GhostLayer text has no version number, so it was cut off.")?; // ok_or_else() to convert Option<T> into a Result<T, E>
 
     let payload = payload
-        .ok_or_else(|| "Invalid payload!")?; // ? to get the value inside Ok() quickly on success, and Err if fails
+        .ok_or_else(|| "That GhostLayer text has nothing after its header, so it was cut off.")?; // ? to get the value inside Ok() quickly on success, and Err if fails
 
     Ok(Frame{
         kind,

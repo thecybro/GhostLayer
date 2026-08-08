@@ -11,12 +11,12 @@ pub trait Protocol: Sync {
     fn create_invite(
         &self,
         input: &CreateInviteInput<'_> // anonymous parameter placeholder, gotta learn more about it
-    ) -> String ; // later swap String with Result<String, GhostLayer>
+    ) -> Result<String, String> ; // later swap String with GhostLayer
 
     fn create_message(
         &self,
         input: &CreateMessageInput<'_>
-    ) -> String ; // later swap String with Result<String, GhostLayer>
+    ) -> Result<String, String> ; // later swap String with GhostLayer
 
     fn parse_invite(
         &self,

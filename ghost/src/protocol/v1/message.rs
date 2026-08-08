@@ -33,7 +33,7 @@ pub fn parse(
     let fixed_length = PUBLIC_KEY_B64_LENGTH + NONCE_B64_LENGTH;
 
     if message.len() <= fixed_length {
-        return Err("Encrypted message is incomplete.".to_string());
+        return Err("This GhostLayer message is incomplete. It was probably cut off when it was copied or sent.".to_string());
     }
 
     let (sender_public_key, nonce_and_ciphertext) = message.split_at(PUBLIC_KEY_B64_LENGTH);

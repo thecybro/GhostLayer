@@ -60,7 +60,6 @@ pub fn create_identity(username: Option<String>) -> FunctionResult {
         username: username,
         error: None,
         display: format!("Identity {display} has been created!").to_string(),
-        // display: format!("Public_key: {public_key}, Private_key: {private_key}"),
         write: vec! [
             StorageWrite {
                 key: "identity".to_string(), value: storage::identity_to_json(&identity)

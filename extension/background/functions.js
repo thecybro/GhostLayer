@@ -156,12 +156,13 @@ export async function decryptMessage(messageKey) {
     return {
       success: false,
       status: "error",
-      display: "No identity found!"
+      error: "decryptMessage called with no stored identity",
+      display: "Create your own identity first. Open the GhostLayer popup and click Create Identity."
     };
   }
-  
-  console.log("Identity: ", identity);
-  console.log("Friend index json: ", friendIndexJson);
+
+  // console.log("Identity: ", identity);
+  // console.log("Friend index json: ", friendIndexJson);
 
   const my_public_b64 = identity.public_key;
   const my_private_b64 = identity.private_key;
@@ -175,12 +176,11 @@ export async function decryptMessage(messageKey) {
   // console.log("Result: ", result);
   
   return {
-      display: result.display,
       success: result.success,
       status: result.success ? "success" : "error",
-  
-      error: result.error ?? null,
-  
+
+      // display is what the user reads, error is only for the console
       display: result.display ?? null,
+      error: result.error ?? null,
     };
 }

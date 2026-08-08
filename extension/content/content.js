@@ -18,6 +18,175 @@ function stripCodeMarkers(text) {
   return (text ?? "").trim().replace(/^`+/, "").replace(/`+$/, "").trim();
 }
 
+// Anything the user needs to know goes through notify() rather than the
+// console. A failure they cannot see is a failure they will act on wrongly,
+// and the worst case here is sending plaintext while believing it is encrypted.
+const NOTIFICATION_CLASS = "ghostlayer-notification";
+
+let notificationHost = null;
+
+// One fixed container that stacks toasts above the Encrypt button. It is
+// recreated if the page ever tears it out of the DOM.
+function getNotificationHost() {
+  if (notificationHost && notificationHost.isConnected) {
+    return notificationHost;
+  }
+
+  notificationHost = document.createElement("div");
+  notificationHost.className = NOTIFICATION_CLASS;
+
+  Object.assign(notificationHost.style, {
+    position: "fixed",
+    right: "20px",
+    bottom: "70px",
+    zIndex: "1000001",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-end",
+    gap: "8px",
+    maxWidth: "340px",
+    // so the empty container never swallows clicks meant for the page
+    pointerEvents: "none",
+  });
+
+  document.body.appendChild(notificationHost);
+
+  return notificationHost;
+}
+
+/*
+ * Show one toast.
+ *
+ * kind is "error", "success" or "info".
+ *
+ * A toast goes away in four ways: the close button, a click anywhere on it,
+ * a couple of clicks or keystrokes elsewhere on the page, or a timeout. The
+ * middle one is what stops a toast sitting there while the user has clearly
+ * moved on. Pass { sticky: true } for a warning that must not vanish on its
+ * own, which leaves only the close button.
+ */
+function notify(message, kind = "info", { sticky = false } = {}) {
+  const palettes = {
+    error: { background: "#2a1216", border: "#7f2530", text: "#ffd7db" },
+    success: { background: "#0e2018", border: "#1f6f4a", text: "#c9f5df" },
+    info: { background: "#111820", border: "#33404d", text: "#dfe7ef" },
+  };
+
+  const palette = palettes[kind] ?? palettes.info;
+
+  const toast = document.createElement("div");
+
+  toast.className = NOTIFICATION_CLASS;
+
+  Object.assign(toast.style, {
+    pointerEvents: "auto",
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "10px",
+    padding: "10px 12px 10px 14px",
+    borderRadius: "8px",
+    border: `1px solid ${palette.border}`,
+    background: palette.background,
+    color: palette.text,
+    font: "13px/1.45 sans-serif",
+    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.35)",
+    cursor: "pointer",
+  });
+
+  const body = document.createElement("span");
+
+  // textContent, never innerHTML. Some of these messages carry a message key
+  // or text the user typed.
+  body.textContent = message;
+
+  Object.assign(body.style, {
+    whiteSpace: "pre-wrap",
+    wordBreak: "break-word",
+  });
+
+  const closeButton = document.createElement("button");
+
+  closeButton.type = "button";
+  closeButton.textContent = "×";
+  closeButton.setAttribute("aria-label", "Dismiss");
+
+  Object.assign(closeButton.style, {
+    flex: "0 0 auto",
+    margin: "-2px -2px 0 0",
+    padding: "0 4px",
+    border: "none",
+    background: "transparent",
+    color: palette.text,
+    font: "16px/1 sans-serif",
+    opacity: "0.7",
+    cursor: "pointer",
+  });
+
+  toast.appendChild(body);
+  toast.appendChild(closeButton);
+
+  let dismissed = false;
+
+  function dismiss() {
+    if (dismissed) {
+      return;
+    }
+
+    dismissed = true;
+
+    clearTimeout(timer);
+    document.removeEventListener("pointerdown", countAction, true);
+    document.removeEventListener("keydown", countAction, true);
+
+    toast.remove();
+  }
+
+  // Errors are worth a few more actions before they disappear on their own.
+  let remaining = kind === "error" ? 4 : 2;
+
+  function countAction(event) {
+    // clicking the toast itself is handled separately
+    if (toast.contains(event.target)) {
+      return;
+    }
+
+    remaining -= 1;
+
+    if (remaining <= 0) {
+      dismiss();
+    }
+  }
+
+  // Errors stay long enough to read twice. Everything else gets out of the way.
+  const lifetime = kind === "error" ? 12000 : 5000;
+  const timer = sticky ? null : setTimeout(dismiss, lifetime);
+
+  closeButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    dismiss();
+  });
+
+  toast.addEventListener("click", dismiss);
+
+  if (!sticky) {
+    // On the next tick, so the very click that produced this toast is not the
+    // first action counted against it. Capture phase, because plenty of pages
+    // stop these events before they reach the document.
+    setTimeout(() => {
+      if (dismissed) {
+        return;
+      }
+
+      document.addEventListener("pointerdown", countAction, true);
+      document.addEventListener("keydown", countAction, true);
+    }, 0);
+  }
+
+  getNotificationHost().appendChild(toast);
+
+  return toast;
+}
+
 function isMessageKey(text) {
   return stripCodeMarkers(text).startsWith(PREFIX);
 }
@@ -69,7 +238,7 @@ function isGhostLayerUi(node) {
 
   return Boolean(
     element?.closest(
-      ".ghostlayer-decrypt-button, .ghostlayer-friend-selector"
+      ".ghostlayer-decrypt-button, .ghostlayer-friend-selector, .ghostlayer-notification"
     )
   );
 }
@@ -134,7 +303,11 @@ function addDecryptButton(messageElement, onDecrypt) {
         button.textContent = "Decrypt";
       }
     } catch (error) {
-      console.log("GhostLayer decryption failed:", error);
+      notify(
+        "GhostLayer could not decrypt this message. " +
+        "It may not be addressed to you.",
+        "error"
+      );
 
       button.disabled = false;
       button.textContent = "Decrypt";
@@ -241,13 +414,15 @@ function processEncryptedTextNode(textNode) {
     // console.log("Decrypted Result: ", decryptionResult);
     
     if (!decryptionResult?.success) {
-      console.log(
-        `Couldn't decrypt the text: ${messageKey}`
-      );
+      // error is developer detail, so it stays in the console
+      if (decryptionResult?.error) {
+        console.debug("GhostLayer:", decryptionResult.error);
+      }
 
-      console.error(
-        decryptionResult?.error ??
-        "Unknown decryption error."
+      notify(
+        decryptionResult?.display ??
+        "GhostLayer could not decrypt this message.",
+        "error"
       );
 
       return false;
@@ -260,8 +435,10 @@ function processEncryptedTextNode(textNode) {
     );
 
     if (!replaced) {
-      console.error(
-        "Decryption succeeded, but the displayed ciphertext could not be replaced."
+      notify(
+        "Decrypted, but GhostLayer could not replace the text on screen:\n\n" +
+        decryptionResult.display,
+        "info"
       );
 
       return false;
@@ -418,19 +595,22 @@ function beforeInputIntoEditor(editor, newText) {
 // Replace editor text and notify the website that input occurred.
 async function replaceContentOfEditor(editor, newText) {
 
-  console.log("GhostLayer editor:", editor);
-  console.log("  tag/role/ce:", editor.tagName,
-  editor.getAttribute("role"), editor.getAttribute("contenteditable"));
-  console.log("  is the editable itself:",
-  editor.closest('[contenteditable="true"]') === editor);
-  console.log("  nested editable:",
-  editor.querySelector('[contenteditable="true"]'));
-  console.log("  activeElement before focus:", document.activeElement);
-  
+  // Uncomment when a new platform will not accept text. These five lines say
+  // whether we are aimed at the real editable, and whether focus survived the
+  // friend selector, which is where most platform bugs turn out to live.
+  // console.log("GhostLayer editor:", editor);
+  // console.log("  tag/role/ce:", editor.tagName,
+  // editor.getAttribute("role"), editor.getAttribute("contenteditable"));
+  // console.log("  is the editable itself:",
+  // editor.closest('[contenteditable="true"]') === editor);
+  // console.log("  nested editable:",
+  // editor.querySelector('[contenteditable="true"]'));
+  // console.log("  activeElement before focus:", document.activeElement);
+
   editor.focus();
 
-  console.log("  activeElement after focus:", document.activeElement);
-  
+  // console.log("  activeElement after focus:", document.activeElement);
+
   // Slate throttles its selection sync at about 100ms, so a zero delay is not
   // enough for it to notice the selection we set. It reads edits off its own
   // model selection, and a stale one makes it ignore the edit entirely.
@@ -514,7 +694,7 @@ async function replaceContentOfEditor(editor, newText) {
     // model, so Slate skips ahead to that.
     const isSlate = editor.hasAttribute("data-slate-editor");
 
-    console.log("GhostLayer editor is slate: ", isSlate);
+    // console.log("GhostLayer editor is slate: ", isSlate);
 
     await selectEverything();
 
@@ -525,7 +705,7 @@ async function replaceContentOfEditor(editor, newText) {
         newText
       );
 
-      console.log("GhostLayer execCommand insertText: ", inserted);
+      // console.log("GhostLayer execCommand insertText: ", inserted);
 
       // Firing has already happened above in the respective
       // event handlers, so we dont have to do it again
@@ -543,7 +723,7 @@ async function replaceContentOfEditor(editor, newText) {
     pasteIntoEditor(editor, newText);
     await nextTick();
 
-    console.log("GhostLayer paste worked: ", getTextFromEditor(editor).includes(newText));
+    // console.log("GhostLayer paste worked: ", getTextFromEditor(editor).includes(newText));
 
     if (getTextFromEditor(editor).includes(newText)) {
       return true;
@@ -554,7 +734,7 @@ async function replaceContentOfEditor(editor, newText) {
     beforeInputIntoEditor(editor, newText);
     await nextTick();
 
-    console.log("GhostLayer beforeinput worked: ", getTextFromEditor(editor).includes(newText));
+    // console.log("GhostLayer beforeinput worked: ", getTextFromEditor(editor).includes(newText));
 
     if (getTextFromEditor(editor).includes(newText)) {
       return true;
@@ -562,7 +742,7 @@ async function replaceContentOfEditor(editor, newText) {
 
     // A failed paste can still eat the selection without inserting anything,
     // which would leave the box empty and lose what the user typed.
-    console.log("GhostLayer editor text after all attempts: ", getTextFromEditor(editor));
+    // console.log("GhostLayer editor text after all attempts: ", getTextFromEditor(editor));
 
     // Nothing reached the editor's own model. Writing the DOM directly here
     // would show the encrypted text while the site keeps sending the original
@@ -578,14 +758,14 @@ encryptButton.addEventListener("mousedown", (event) => {
 // Main encryption flow.
 encryptButton.addEventListener("click", async () => {
   if (!activeEditor) {
-    console.error("No active editor found!");
+    notify("Click into a message box first, then press Encrypt.", "info");
     return;
   }
 
   const plaintext = getTextFromEditor(activeEditor);
 
   if (!plaintext.trim()) {
-    console.error("Textbox is empty!");
+    notify("Type a message before encrypting.", "info");
     return;
   }
 
@@ -595,9 +775,14 @@ encryptButton.addEventListener("click", async () => {
     });
 
   if (!friendsResult?.success) {
-    console.error(
-      friendsResult?.error ??
-      "Could not load friends."
+    if (friendsResult?.error) {
+      console.debug("GhostLayer:", friendsResult.error);
+    }
+
+    notify(
+      friendsResult?.display ??
+      "Could not load your friends. Open the GhostLayer popup and create an identity first.",
+      "error"
     );
 
     return;
@@ -606,7 +791,10 @@ encryptButton.addEventListener("click", async () => {
   const friends = friendsResult.friends ?? [];
 
   if (friends.length === 0) {
-    console.error("No friends found.");
+    notify(
+      "No friends yet. Add one in the GhostLayer popup using their invite key.",
+      "info"
+    );
     return;
   }
 
@@ -625,10 +813,14 @@ encryptButton.addEventListener("click", async () => {
     });
 
   if (!encryptionResult?.success) {
-    console.error(
-      encryptionResult?.error ??
+    if (encryptionResult?.error) {
+      console.debug("GhostLayer:", encryptionResult.error);
+    }
+
+    notify(
       encryptionResult?.display ??
-      "Encryption failed."
+      "GhostLayer could not encrypt this message.",
+      "error"
     );
 
     return;
@@ -641,11 +833,6 @@ encryptButton.addEventListener("click", async () => {
   // to get something like `message_key_here`
 
   if (!replaced) {
-    console.error(
-      "GhostLayer: could not insert the encrypted text safely. " +
-      "Do NOT press send as this site may still send your original message."
-    );
-
     // A real Ctrl+V is a trusted paste, so every editor accepts it even when
     // none of the scripted attempts above got through. Putting the key on the
     // clipboard leaves the user a way to finish by hand.
@@ -655,19 +842,29 @@ encryptButton.addEventListener("click", async () => {
         formatedMessageKey
       );
 
-      console.error(
-        "GhostLayer: copy this by hand:" +
-        formatedMessageKey
+      notify(
+        "Do NOT press send, this site may still send your original message.\n\n" +
+        "The encrypted text is on your clipboard instead. " +
+        "Clear the box yourself and press Ctrl+V.",
+        "error",
+        // the user is about to type and paste, and neither should hide this
+        { sticky: true }
       );
     } catch (error) {
       // The clipboard needs a recent user gesture and the friend selector can
-      // outlast it, so the key is printed here rather than lost.
-      console.error(
-        "GhostLayer: could not reach the clipboard either.",
-        error
-      );
+      // outlast it. This is the only place a console line survives, because a
+      // toast the user closes by accident would lose the message for good.
+      // The encrypted key is safe to print. The plaintext is not, so it stays
+      // in the editor where the user can still see it instead.
       console.error("GhostLayer: copy this by hand:", encryptionResult.messageKey);
-      console.error("GhostLayer: your original text was:", plaintext);
+
+      notify(
+        "Do NOT press send, this site may still send your original message.\n\n" +
+        "GhostLayer could not reach the clipboard either. " +
+        "Your encrypted text is in the browser console (Ctrl+Shift+I).",
+        "error",
+        { sticky: true }
+      );
     }
   }
 });

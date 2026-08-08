@@ -25,8 +25,8 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
                 FunctionResult { 
                     success: false,
                     username: None,
-                    error: Some("Public key doesn't exist without identity!".to_string()),
-                    display: "No identity found!".to_string(),
+                    error: Some("copy_to_clipboard public_key with has_identity = false".to_string()),
+                    display: "You have no public key yet. Click Create Identity first.".to_string(),
                     write: vec![] 
                 }
             } else {
@@ -49,8 +49,8 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
                 FunctionResult {
                     success: false,
                     username: None,
-                    error: Some("Username doesn't exist without identity!".to_string()),
-                    display: "No identity!".to_string(),
+                    error: Some("copy_to_clipboard username with has_identity = false".to_string()),
+                    display: "You have no username yet. Click Create Identity first.".to_string(),
                     write: vec![]
                 }
             } else {
@@ -71,8 +71,8 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
                 FunctionResult { 
                     success: false,
                     username: None,
-                    error: Some("Invite key doesn't exist without identity!".to_string()),
-                    display: "No identity found!".to_string(),
+                    error: Some("copy_to_clipboard invite_key with has_identity = false".to_string()),
+                    display: "You have no invite key yet. Click Create Identity first.".to_string(),
                     write: vec![] 
                 }
             } else {
@@ -80,16 +80,27 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
                 
                 // Converts Option<String> into Option<&str>.
                 let username = parsed_data.username.as_deref();
-                let text = parser::create_invite_key(&public_key, username);
-                let display = &text.clone()[0..6];
-                
-                copy(text.clone()).await?; // only happens here, inside success
-                FunctionResult { 
-                    success: true,
-                    username: None,
-                    error: None,
-                    display: format!("Invite key {display} has been copied to clipboard!").to_string(),
-                    write: vec![] 
+                match parser::create_invite_key(&public_key, username) {
+                    Err(e) => FunctionResult {
+                        success: false,
+                        username: None,
+                        display: e,
+                        error: Some("create_invite_key failed".to_string()),
+                        write: vec![],
+                    },
+                    Ok(text) => {
+                        // take() rather than a slice, so a short key cannot panic
+                        let display = text.chars().take(6).collect::<String>();
+
+                        copy(text.clone()).await?; // only happens here, inside success
+                        FunctionResult {
+                            success: true,
+                            username: None,
+                            error: None,
+                            display: format!("Invite key {display} has been copied to clipboard!").to_string(),
+                            write: vec![]
+                        }
+                    }
                 }
             }
         },
@@ -97,8 +108,8 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
             FunctionResult {
                 success: false,
                 username: None,
-                error: Some("Invalid item".to_string()),
-                display: "Invalid item".to_string(),
+                error: Some("copy_to_clipboard called with an unknown item".to_string()),
+                display: "GhostLayer does not know how to copy that. This is a bug in GhostLayer, please report it.".to_string(),
                 write: vec![]
             }
         }
@@ -110,8 +121,8 @@ pub async fn copy_to_clipboard(storage_json: String, item: String) -> Result<Str
                         "{{\
                             \"success\": false,\
                             \"username\": null,\
-                            \"error\": \"Serialization failed: {}\",\
-                            \"display\": \"Error occured while copying data to clipboard!\",\
+                            \"error\": \"serde_json to_string failed: {}\",\
+                            \"display\": \"GhostLayer could not package its own result. This is a bug in GhostLayer, please report it.\",\
                             \"write\": []\
                         }}",
                         serde_err

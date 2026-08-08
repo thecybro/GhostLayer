@@ -2,6 +2,8 @@
   "manifest_version": 3,
   "name": "GhostLayer",
   "version": "0.1.0",
+  "description": "End to end encrypt messages in any web chat. Your keys never leave your device. No accounts, no servers.",
+  "homepage_url": "https://github.com/thecybro/GhostLayer",
 
   "action": {
     "default_popup": "popup.html"

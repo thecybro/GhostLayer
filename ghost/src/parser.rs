@@ -13,14 +13,13 @@ use crate::protocol::{
 pub fn create_invite_key(
     public_key: &str, 
     nickname: Option<&str>
-) -> String {
-    // Do proper error handling later
+) -> Result<String, String> {
     create_invite(
         &CreateInviteInput {
             public_key,
             nickname,
         }
-    ).unwrap_or_default()
+    )
 }
 
 pub fn extract_details_from_invite_key(

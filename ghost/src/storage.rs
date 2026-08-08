@@ -25,7 +25,7 @@ pub fn identity_to_json(identity: &Identity) -> String {
 pub fn identity_from_json(json: &str) -> Result<Identity, String> {
     match serde_json::from_str::<Identity>(json) {
         Ok(id) => Ok(id),
-        Err(_) => Err( "Couldn't convert to identity from json!".to_string())
+        Err(_) => Err("Your saved identity could not be read, so it is corrupted. Create a new identity in the GhostLayer popup.".to_string())
     }
 }
 
@@ -36,7 +36,7 @@ pub fn friend_to_json(friend: &Friend) -> String {
 pub fn friend_from_json(json: &str) -> Result<Friend, String> {
     match serde_json::from_str::<Friend>(json) {
         Ok(fr) => Ok(fr),
-        Err(_) => Err("Couldn't convert to friend from json!".to_string())
+        Err(_) => Err("A saved friend could not be read, so that entry is corrupted. Remove the friend and add them again.".to_string())
     }
 }
 
@@ -47,7 +47,7 @@ pub fn index_to_json(index: &Vec<String>) -> String {
 pub fn index_from_json(json: &str) -> Result<Vec<String>, String> {
     match serde_json::from_str::<Vec<String>>(json) {
         Ok(index) => Ok(index),
-        Err(_) => Err("Couldn't convert to index from json!".to_string())
+        Err(_) => Err("Your saved friend list could not be read, so it is corrupted.".to_string())
     }
 }
 
@@ -58,7 +58,7 @@ pub fn add_to_index(index: &Vec<String>, public_key: &str) -> Result<Vec<String>
         new_index.push(public_key.to_string());
         Ok(new_index)
     } else {
-        Err("Duplicate public key".to_string())
+        Err("That friend is already in your list.".to_string())
     } 
     
 }

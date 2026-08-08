@@ -92,12 +92,14 @@ async function handleDecryptMessage(message, sendResponse) {
     } else {
       sendResponse({
         success: false,
+        display: result.display,
         error: result.error
       });
     }
   } catch (error) {
     sendResponse({
       success: false,
+      display: "GhostLayer could not decrypt this message.",
       error: error instanceof Error
         ? error.message
         : String(error)

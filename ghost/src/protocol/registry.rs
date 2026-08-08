@@ -29,14 +29,16 @@ fn protocol_by_version(
         .iter()
         .copied()
         .find(|p| p.version() == version)
-        .ok_or_else(|| "Invalid Protocol version".into())
+        .ok_or_else(|| format!(
+            "This was made with GhostLayer protocol version {version}, which this copy of GhostLayer cannot read. Update GhostLayer to open it."
+        ))
 }
 
 pub fn create_invite(
     input: &CreateInviteInput<'_>
 ) -> Result<String, String> { // one string is error here
     let protocol = current_protocol();
-    let payload = protocol.create_invite(input);
+    let payload = protocol.create_invite(input)?;
 
     Ok(framing::create_frame(
         FrameKind::Invite,
@@ -51,7 +53,7 @@ pub fn parse_invite(
     let frame = framing::parse_frame(input)?;
 
     if frame.kind != FrameKind::Invite {
-        return Err("Invalid kind !".into())
+        return Err("That is a GhostLayer message, not an invite key. Paste the invite key your friend copied with Copy Invite.".into())
     };
 
     let protocol = protocol_by_version(frame.version)?;
@@ -62,7 +64,7 @@ pub fn create_message(
     input: &CreateMessageInput<'_>
 ) -> Result<String, String> {
     let protocol = current_protocol();
-    let payload = protocol.create_message(input);
+    let payload = protocol.create_message(input)?;
 
     Ok(framing::create_frame(
         FrameKind::Message,
@@ -77,7 +79,7 @@ pub fn parse_message(
     let frame = framing::parse_frame(message)?;
     
     if frame.kind != FrameKind::Message {
-        return Err("Invalid kind!".into())
+        return Err("That is a GhostLayer invite key, not a message. Add it as a friend in the GhostLayer popup instead.".into())
     };
 
     let protocol = protocol_by_version(frame.version)?;

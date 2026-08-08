@@ -19,7 +19,7 @@ fn create_friend(nickname: Option<String>, public_key: String, key_id: String) -
     match STANDARD.decode(&public_key){
         Ok(bytes) => {
             if public_key.trim().is_empty() {
-                return Err("Public key is required to add a friend!".to_string())
+                return Err("That invite key has no public key in it. Ask your friend to copy their invite again.".to_string())
             };
 
             // Isn't this how we check the length of a string?
@@ -27,7 +27,7 @@ fn create_friend(nickname: Option<String>, public_key: String, key_id: String) -
             // But if we checked before decoding, the length would be 44
             // Both valid
             if bytes.len() != 32{
-                return Err("Invalid encoding!".to_string())
+                return Err("That invite key's public key is the wrong length, so the invite is damaged. Ask your friend to copy it again.".to_string())
             }
             
             Ok(Friend {
@@ -37,7 +37,7 @@ fn create_friend(nickname: Option<String>, public_key: String, key_id: String) -
             })
         }
         Err(_) => {
-            Err("Error occured while decoding public key!".to_string())
+            Err("That invite key's public key is not valid Base64, so the invite is damaged. Ask your friend to copy it again.".to_string())
         }
     }
 }
@@ -54,8 +54,8 @@ pub fn add_friend(
         return FunctionResult{
             success: false,
             username: None,
-            error: Some("Identity not found!".to_string()),
-            display: "Friends can't be added without having an identity yourself!".to_string(),
+            error: Some("add_friend called with has_identity = false".to_string()),
+            display: "Create your own identity first. GhostLayer needs your key pair to work out a shared secret with a friend.".to_string(),
             write: vec![]
         }
     }
@@ -109,8 +109,8 @@ pub fn add_friend(
                             return FunctionResult {
                                 success: false,
                                 username: None,
-                                error: Some(e),
-                                display: "Couldn't add friend details to storage!".to_string(),
+                                display: e,
+                                error: Some("add_to_index rejected the public key".to_string()),
                                 write: vec![]
                                 }
                         }
@@ -120,8 +120,8 @@ pub fn add_friend(
                     return FunctionResult {
                         success: false,
                         username: None,
-                        error: Some(e),
-                        display: "Couldn't create friend!".to_string(),
+                        display: e,
+                        error: Some("create_friend rejected the invite key".to_string()),
                         write: vec![]
                         }
                 },
@@ -131,8 +131,8 @@ pub fn add_friend(
             return FunctionResult {
                 success: false,
                 username: None,
-                error: Some(e),
-                display: "Invalid invite key!".to_string(),
+                display: e,
+                error: Some("extract_details_from_invite_key failed".to_string()),
                 write: vec![]
                 }
         }
