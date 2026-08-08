@@ -369,9 +369,13 @@ function getTextFromEditor(editor) {
 }
 
 // Replace editor text and notify the website that input occurred.
-function replaceContentOfEditor(editor, newText) {
+async function replaceContentOfEditor(editor, newText) {
   editor.focus();
 
+  function nextTick() {
+    return new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  
   if (editor instanceof HTMLTextAreaElement) {
     const setter = Object.getOwnPropertyDescriptor(
       HTMLTextAreaElement.prototype,
@@ -383,6 +387,17 @@ function replaceContentOfEditor(editor, newText) {
     }
 
     setter.call(editor, newText);
+
+    editor.dispatchEvent(
+      new InputEvent("input", {
+        bubbles: true,
+        composed: true,
+        inputType: "insertText",
+        data: newText,
+      })
+    );
+    return true;
+    
   } else if (editor instanceof HTMLInputElement) {
     const setter = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
@@ -394,6 +409,17 @@ function replaceContentOfEditor(editor, newText) {
     }
 
     setter.call(editor, newText);
+
+    editor.dispatchEvent(
+      new InputEvent("input", {
+        bubbles: true,
+        composed: true,
+        inputType: "insertText",
+        data: newText,
+      })
+    );
+    return true;
+    
   } else if (
     editor instanceof HTMLElement &&
     editor.isContentEditable
@@ -411,29 +437,41 @@ function replaceContentOfEditor(editor, newText) {
     selection.removeAllRanges();
     selection.addRange(range);
 
+    // So we can let selectiochange reach the editor's own state before commanding it
+    await nextTick();
+    
     const inserted = document.execCommand( // deprecated so have to replace it soon, but it works for nwo
       "insertText",
       false,
       newText
     );
 
-    if (!inserted) {
-      editor.textContent = newText;
+    console.log("GhostLayer execCommand inserText: ", inserted);
+
+    // Firing has already happened above in the respective
+    // event handlers, so we dont have to do it again
+    if (inserted) {
+      // editor.textContent = newText;
+      return true;
     }
-  } else {
+
+    // Only reached when execCommand was refused.
+    // Cuz on the slate/lexical (discord/messenger), this
+    // updates the view but not the model, so it must not
+    // report success className
+    editor.textContent = newText;
+  
+    editor.dispatchEvent(
+      new InputEvent("input", {
+        bubbles: true,
+        composed: true,
+        inputType: "insertText",
+        data: newText,
+      })
+    );
     return false;
   }
-
-  editor.dispatchEvent(
-    new InputEvent("input", {
-      bubbles: true,
-      composed: true,
-      inputType: "insertText",
-      data: newText,
-    })
-  );
-
-  return true;
+  return false;
 }
 
 // Main encryption flow.
@@ -495,14 +533,15 @@ encryptButton.addEventListener("click", async () => {
     return;
   }
 
-  const replaced = replaceContentOfEditor(
+  const replaced = await replaceContentOfEditor(
     activeEditor,
     encryptionResult.messageKey
   );
 
   if (!replaced) {
     console.error(
-      "The message was encrypted, but GhostLayer could not replace the editor content."
+      "GhostLayer: could not insert the encrypted text safely. " +
+      "Do NOT press send as this site may still send your original message."
     );
   }
 });
