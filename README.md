@@ -51,7 +51,8 @@ gets someone hurt.
 
 ### From the Chrome Web Store
 
-Get it from chrome web store if exists: [GhostLayer](#)
+
+- Get it from chrome web store: [GhostLayer](https://chromewebstore.google.com/detail/imdcaehbfefbiclgafpjlbelopfdfaek?utm_source=item-share-cb)
 
 ### From source
 
