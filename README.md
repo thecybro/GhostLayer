@@ -4,6 +4,9 @@ End to end encryption for chat platforms that do not have it.
 
 See ***[LIMITATIONS.md](LIMITATIONS.md)*** to know current limitations before you use it.
 
+> The only important part are extension/ and ghost/.
+> Other directories are development aids, not part of the extension at all
+
 **GhostLayer** is a Chrome extension. You type a message, pick a friend, and it is
 replaced with a ciphertext blob before it ever reaches the platform. Your friend
 clicks **Decrypt** and reads it. Discord, Slack, and everyone in between see only
